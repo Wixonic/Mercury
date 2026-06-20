@@ -9,6 +9,11 @@
 			"DOM.Iterable"
 		],
 		"skipLibCheck": true,
+		"paths": {
+			"/scripts/*": [
+				"./scripts/*"
+			]
+		},
 		/* Bundler mode */
 		"moduleResolution": "bundler",
 		"allowImportingTsExtensions": true,

@@ -16,7 +16,7 @@
 				"title": "Mercury",
 				"width": 800,
 				"height": 600,
-				"titleBarStyle": "Overlay",
+				"titleBarStyle": "Transparent",
 				"hiddenTitle": true
 			}
 		],
