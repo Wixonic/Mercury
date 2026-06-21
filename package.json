@@ -7,22 +7,26 @@
 	"license": "Wixonic Non-Commercial License",
 	"repository": "github:Wixonic/Mercury",
 	"scripts": {
-		"dev": "cd src/ && vite",
-		"build": "cd src/ && tsc && vite build",
-		"preview": "cd src/ && vite preview",
+		"dev": "node build.mjs --serve",
+		"build": "node build.mjs",
 		"tauri": "tauri"
 	},
 	"dependencies": {
 		"@tauri-apps/api": "^2",
 		"@tauri-apps/plugin-http": "^2.5.9",
 		"@tauri-apps/plugin-opener": "^2",
-		"@tauri-apps/plugin-websocket": "^2.4.2"
+		"@tauri-apps/plugin-websocket": "^2.4.2",
+		"qrcode": "^1.5.4"
 	},
 	"devDependencies": {
 		"@tauri-apps/cli": "^2",
-		"typescript": "~5.6.2",
-		"vite": "^6.0.3"
+		"@types/qrcode": "^1.5.6",
+		"esbuild": "^0.25.0",
+		"typescript": "~5.6.2"
 	},
 	"type": "module",
-	"private": true
+	"private": true,
+	"allowScripts": {
+		"esbuild@0.25.12": true
+	}
 }

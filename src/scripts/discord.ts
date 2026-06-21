@@ -1,5 +1,7 @@
 import WebSocket, { Message as WebSocketMessage } from "@tauri-apps/plugin-websocket";
 
+import { RemoteAuthClient } from "/scripts/discord/remoteAuth.ts";
+
 import { Client, RestClient } from "/scripts/lib/client.ts";
 import { join } from "/scripts/lib/utils.ts";
 
@@ -13,8 +15,9 @@ type GatewayMessage = {
 export class DiscordClient extends Client {
 	rest: RestClient;
 	ws: WebSocket | undefined;
+	remoteAuth: RemoteAuthClient;
 
-	heatbeat: number | undefined;
+	heartbeat: ReturnType<typeof setInterval> | undefined;
 	heartbeatTimestamp: number | undefined;
 	ping: number | undefined;
 
@@ -26,9 +29,12 @@ export class DiscordClient extends Client {
 	constructor(restBaseURL: URL) {
 		super();
 		this.rest = new RestClient(restBaseURL);
+		this.remoteAuth = new RemoteAuthClient(this);
 	}
 
-	async init() {
+	async init(token?: string) {
+		if (token) this.token = token;
+
 		try {
 			const gatewayResponse = await this.rest.request("/gateway");
 			const gatewayData = await gatewayResponse.json();
@@ -47,9 +53,9 @@ export class DiscordClient extends Client {
 
 	async reconnect() {
 		try {
-			const url = this.resumeGatewayURL ?? (await (await this.rest.request("/gateway")).json()).url;
+			const gatewayURL = this.resumeGatewayURL ?? (await (await this.rest.request("/gateway")).json()).url;
 
-			this.ws = await WebSocket.connect(join(url, "?v=10&encoding=json"));
+			this.ws = await WebSocket.connect(join(gatewayURL, "?v=10&encoding=json"));
 			this.ws.addListener(this.gateway.bind(this));
 		} catch (error) {
 			console.error("Failed to reconnect:", error);
@@ -58,8 +64,8 @@ export class DiscordClient extends Client {
 	}
 
 	async disconnect() {
-		if (this.heatbeat) clearInterval(this.heatbeat);
-		this.heatbeat = undefined;
+		if (this.heartbeat) clearInterval(this.heartbeat);
+		this.heartbeat = undefined;
 
 		if (this.ws) {
 			try {
@@ -130,7 +136,7 @@ export class DiscordClient extends Client {
 
 			case 10: // Hello
 				this.sendHeartbeat();
-				this.heatbeat = setInterval(() => this.sendHeartbeat(), message.data.heartbeat_interval);
+				this.heartbeat = setInterval(() => this.sendHeartbeat(), message.data.heartbeat_interval);
 
 				if (this.sessionId && this.sequence !== null && this.resumeGatewayURL && this.token) this.sendResume();
 				else if (this.token) this.sendIdentify();
@@ -177,7 +183,6 @@ export class DiscordClient extends Client {
 	}
 
 	async sendIdentify() {
-		console.log("Sending Identify...");
 		this.send({
 			op: 2,
 			d: {
@@ -194,7 +199,6 @@ export class DiscordClient extends Client {
 	}
 
 	async sendResume() {
-		console.log("Sending Resume...");
 		this.send({
 			op: 6,
 			d: {

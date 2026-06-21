@@ -14,7 +14,6 @@
 				"./scripts/*"
 			]
 		},
-		/* Bundler mode */
 		"moduleResolution": "bundler",
 		"allowImportingTsExtensions": true,
 		"resolveJsonModule": true,
