@@ -41,12 +41,6 @@ const sharedOptions = {
 	platform: "browser",
 	target: "es2020",
 	format: "esm",
-	external: [
-		"@tauri-apps/api",
-		"@tauri-apps/plugin-http",
-		"@tauri-apps/plugin-opener",
-		"@tauri-apps/plugin-websocket",
-	],
 	plugins: [absoluteImportPlugin],
 };
 
