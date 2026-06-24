@@ -1,14 +1,41 @@
-// import QRCode from "qrcode";
+import { DiscordClient } from "/scripts/services/discord.ts";
+import { store } from "/scripts/store/store.ts";
+import { renderLogin } from "/scripts/components/login/login.ts";
+import { renderApp } from "/scripts/components/app/app.ts";
 
-import { DiscordClient } from "/scripts/discord.ts";
-import { view } from "/scripts/lib/view.ts";
+export const discordClient = new DiscordClient(new URL("https://discord.com/api/v9"));
 
-const main = async () => {
-	const discordClient = new DiscordClient(new URL("https://discord.com/api/v10"));
+const main = () => {
+	const appContainer = document.querySelector("main");
+	if (!appContainer) {
+		console.error("Mount point <main> not found");
+		return;
+	}
 
-	discordClient.token = localStorage.getItem("discord_token") ?? undefined;
-	if (!discordClient.token) await view("login");
-	else await view("app");
+	let currentCleanup: (() => void) | null = null;
+	let currentToken: string | null = null;
+
+	store.subscribe((state) => {
+		if (state.token && state.token !== currentToken) {
+			currentToken = state.token;
+			discordClient.init(state.token);
+			store.setState({ route: "app" });
+		}
+	});
+
+	store.subscribe((state) => {
+		if (currentCleanup) {
+			try {
+				currentCleanup();
+			} catch (error) {
+				console.error("Error cleaning up previous view:", error);
+			}
+			currentCleanup = null;
+		}
+
+		if (state.route === "login") currentCleanup = renderLogin(appContainer);
+		else if (state.route === "app") currentCleanup = renderApp(appContainer);
+	});
 };
 
 addEventListener("DOMContentLoaded", main);

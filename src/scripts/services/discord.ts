@@ -1,9 +1,9 @@
 import WebSocket, { Message as WebSocketMessage } from "@tauri-apps/plugin-websocket";
 
-import { RemoteAuthClient } from "/scripts/discord/remoteAuth.ts";
-
+import { RemoteAuthClient } from "/scripts/services/remoteAuth.ts";
 import { Client, RestClient } from "/scripts/lib/client.ts";
 import { join } from "/scripts/lib/utils.ts";
+import { store } from "/scripts/store/store.ts";
 
 type GatewayMessage = {
 	code: number;
@@ -33,7 +33,10 @@ export class DiscordClient extends Client {
 	}
 
 	async init(token?: string) {
-		if (token) this.token = token;
+		if (token) {
+			this.token = token;
+			this.rest.init(token);
+		}
 
 		try {
 			const gatewayResponse = await this.rest.request("/gateway");
@@ -41,7 +44,7 @@ export class DiscordClient extends Client {
 			console.log("Gateway response data:", gatewayData);
 
 			try {
-				this.ws = await WebSocket.connect(join(gatewayData.url, "?v=10&encoding=json"));
+				this.ws = await WebSocket.connect(join(gatewayData.url, "?v=9&encoding=json"));
 				this.ws.addListener(this.gateway.bind(this));
 			} catch (error) {
 				console.error("Failed to initialize Discord client:", error);
@@ -117,6 +120,11 @@ export class DiscordClient extends Client {
 					this.sessionId = message.data.session_id;
 					this.resumeGatewayURL = message.data.resume_gateway_url;
 					console.log("Ready - Session ID:", this.sessionId);
+
+					store.setState({
+						currentUser: message.data.user,
+						route: "app"
+					});
 				}
 				break;
 

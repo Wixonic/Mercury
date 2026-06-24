@@ -1,6 +1,6 @@
 import WebSocket, { Message as WebSocketMessage } from "@tauri-apps/plugin-websocket";
 
-import type { DiscordClient } from "/scripts/discord.ts";
+import type { DiscordClient } from "/scripts/services/discord.ts";
 import {
 	arrayBufferToBase64,
 	base64ToArrayBuffer,
@@ -8,19 +8,14 @@ import {
 	base64URLDecode
 } from "/scripts/lib/utils.ts";
 
-export class RemoteAuthClient {
+export class RemoteAuthClient extends EventTarget {
 	client: DiscordClient;
 	ws: WebSocket | undefined;
 	keyPair: CryptoKeyPair | undefined;
 	heartbeatTimer: any;
 
-	onQRReceived: ((URL: string) => void) | undefined;
-	onUserDetected: ((user: { id: string; discriminator: string; avatar: string; username: string }) => void) | undefined;
-	onTokenReceived: ((token: string) => void) | undefined;
-	onCancel: (() => void) | undefined;
-	onError: ((error: any) => void) | undefined;
-
 	constructor(client: DiscordClient) {
+		super();
 		this.client = client;
 	}
 
@@ -49,6 +44,7 @@ export class RemoteAuthClient {
 				if (rawMessage.type === "Close") {
 					console.log("Remote Auth WebSocket connection closed:", rawMessage.data);
 					this.cleanup();
+					this.dispatchEvent(new Event("close"));
 					return;
 				}
 
@@ -60,12 +56,12 @@ export class RemoteAuthClient {
 					await this.handleMessage(message, encodedPublicKey);
 				} catch (error) {
 					console.error("Failed to parse remote auth message:", error);
-					if (this.onError) this.onError(error);
+					this.dispatchEvent(new CustomEvent("error", { detail: error }));
 				}
 			});
 		} catch (error) {
 			console.error("Failed to initialize remote auth:", error);
-			if (this.onError) this.onError(error);
+			this.dispatchEvent(new CustomEvent("error", { detail: error }));
 		}
 	}
 
@@ -102,13 +98,13 @@ export class RemoteAuthClient {
 					});
 				} catch (error) {
 					console.error("Failed to solve nonce proof:", error);
-					if (this.onError) this.onError(error);
+					this.dispatchEvent(new CustomEvent("error", { detail: error }));
 				}
 				break;
 
 			case "pending_remote_init":
 				const qrURL = `https://discord.com/ra/${message.fingerprint}`;
-				if (this.onQRReceived) this.onQRReceived(qrURL);
+				this.dispatchEvent(new CustomEvent("qr", { detail: qrURL }));
 				break;
 
 			case "pending_ticket":
@@ -123,17 +119,17 @@ export class RemoteAuthClient {
 					const decryptedString = new TextDecoder().decode(decryptedBytes);
 					const [id, discriminator, avatar, username] = decryptedString.split(":");
 
-					if (this.onUserDetected) {
-						this.onUserDetected({
+					this.dispatchEvent(new CustomEvent("user_detected", {
+						detail: {
 							id,
 							discriminator,
 							avatar,
 							username
-						});
-					}
+						}
+					}));
 				} catch (error) {
 					console.error("Failed to decrypt user payload:", error);
-					if (this.onError) this.onError(error);
+					this.dispatchEvent(new CustomEvent("error", { detail: error }));
 				}
 				break;
 
@@ -155,16 +151,16 @@ export class RemoteAuthClient {
 					);
 
 					const token = new TextDecoder().decode(decryptedBytes);
-					if (this.onTokenReceived) this.onTokenReceived(token);
+					this.dispatchEvent(new CustomEvent("token", { detail: token }));
 				} catch (error) {
 					console.error("Failed to complete login:", error);
-					if (this.onError) this.onError(error);
+					this.dispatchEvent(new CustomEvent("error", { detail: error }));
 				}
 				this.cleanup();
 				break;
 
 			case "cancel":
-				if (this.onCancel) this.onCancel();
+				this.dispatchEvent(new Event("cancel"));
 				this.cleanup();
 				break;
 		}
@@ -187,7 +183,9 @@ export class RemoteAuthClient {
 		}
 
 		if (this.ws) {
-			this.ws.disconnect();
+			this.ws.disconnect().catch((error) => {
+				console.error("Failed to disconnect Remote Auth WebSocket:", error);
+			});
 			this.ws = undefined;
 		}
 	}

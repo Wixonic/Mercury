@@ -26,4 +26,8 @@ export class RestClient extends Client {
 		if (!response.ok) throw new Error(`HTTP error: ${response.status} ${response.statusText}`);
 		else return response;
 	}
+
+	init(token: string): void {
+		this.headers["Authorization"] = token;
+	}
 };

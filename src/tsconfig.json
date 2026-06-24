@@ -10,6 +10,9 @@
 		],
 		"skipLibCheck": true,
 		"paths": {
+			"/*": [
+				"./*"
+			],
 			"/scripts/*": [
 				"./scripts/*"
 			]

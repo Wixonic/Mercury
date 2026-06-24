@@ -11,7 +11,10 @@ const distDir = resolve(__dirname, "dist");
 const absoluteImportPlugin = {
 	name: "absolute-import-resolver",
 	setup(build) {
-		build.onResolve({ filter: /^\/scripts\// }, (args) => {
+		build.onResolve({ filter: /^\// }, (args) => {
+			if (args.path.startsWith(srcDir)) {
+				return;
+			}
 			let absPath = resolve(srcDir, args.path.slice(1));
 			if (absPath.endsWith(".js")) {
 				const tsPath = absPath.replace(/\.js$/, ".ts");
@@ -25,23 +28,16 @@ const absoluteImportPlugin = {
 	},
 };
 
-const viewsDir = resolve(srcDir, "scripts", "views");
-const viewEntryPoints = [];
-
-for (const name of readdirSync(viewsDir)) {
-	const entry = join(viewsDir, name, "index.ts");
-	try {
-		statSync(entry);
-		viewEntryPoints.push({ in: entry, out: `views/${name}/index` });
-	} catch { }
-}
-
 const sharedOptions = {
 	bundle: true,
 	platform: "browser",
 	target: "es2020",
 	format: "esm",
+	splitting: true,
 	plugins: [absoluteImportPlugin],
+	loader: {
+		".html": "text",
+	},
 };
 
 async function build() {
@@ -58,35 +54,13 @@ async function build() {
 		} catch { }
 	}
 
-	for (const name of readdirSync(viewsDir)) {
-		const htmlSrc = join(viewsDir, name, "index.html");
-		const htmlDst = resolve(distDir, "views", name, "index.html");
-		try {
-			statSync(htmlSrc);
-			mkdirSync(resolve(distDir, "views", name), { recursive: true });
-			cpSync(htmlSrc, htmlDst);
-		} catch { }
-
-		const assetsSrc = join(viewsDir, name, "assets");
-		try {
-			statSync(assetsSrc);
-			cpSync(assetsSrc, resolve(distDir, "views", name, "assets"), { recursive: true });
-		} catch { }
-	}
-
 	await esbuild.build({
 		...sharedOptions,
-		entryPoints: [{ in: resolve(srcDir, "main.ts"), out: "main" }],
+		entryPoints: [
+			{ in: resolve(srcDir, "main.ts"), out: "main" }
+		],
 		outdir: distDir,
 	});
-
-	if (viewEntryPoints.length > 0) {
-		await esbuild.build({
-			...sharedOptions,
-			entryPoints: viewEntryPoints,
-			outdir: distDir,
-		});
-	}
 
 	console.log("✓ Build complete →", distDir);
 }
