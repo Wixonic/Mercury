@@ -1,7 +1,7 @@
 import { DiscordClient } from "/scripts/services/discord.ts";
 import { store } from "/scripts/store/store.ts";
-import { renderLogin } from "/scripts/components/login/login.ts";
-import { renderApp } from "/scripts/components/app/app.ts";
+import { renderLogin } from "/components/login/login.ts";
+import { renderApp } from "/components/app/app.ts";
 
 export const discordClient = new DiscordClient(new URL("https://discord.com/api/v9"));
 

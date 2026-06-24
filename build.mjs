@@ -12,6 +12,9 @@ const absoluteImportPlugin = {
 	name: "absolute-import-resolver",
 	setup(build) {
 		build.onResolve({ filter: /^\// }, (args) => {
+			if (args.path.startsWith("/assets/")) {
+				return { path: args.path, external: true };
+			}
 			if (args.path.startsWith(srcDir)) {
 				return;
 			}
@@ -44,7 +47,6 @@ async function build() {
 	mkdirSync(distDir, { recursive: true });
 
 	cpSync(resolve(srcDir, "index.html"), resolve(distDir, "index.html"));
-	cpSync(resolve(srcDir, "main.css"), resolve(distDir, "main.css"));
 
 	for (const folder of ["styles", "assets"]) {
 		const src = resolve(srcDir, folder);
@@ -57,7 +59,8 @@ async function build() {
 	await esbuild.build({
 		...sharedOptions,
 		entryPoints: [
-			{ in: resolve(srcDir, "main.ts"), out: "main" }
+			{ in: resolve(srcDir, "main.ts"), out: "main" },
+			{ in: resolve(srcDir, "main.css"), out: "main" }
 		],
 		outdir: distDir,
 	});

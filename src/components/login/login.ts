@@ -1,7 +1,8 @@
-import QRCode from "qrcode";
+import QRCode from "qr-code-styling";
 
 import { discordClient } from "/main.ts";
 import { store } from "/scripts/store/store.ts";
+import { getCSSColor } from "/scripts/lib/utils.ts";
 
 import html from "./login.html";
 
@@ -13,6 +14,7 @@ export const renderLogin = (container: HTMLElement): (() => void) => {
 
 
 	const refresh = () => {
+		blurQR();
 		discordClient.remoteAuth.cleanup();
 		discordClient.remoteAuth.init();
 	};
@@ -21,8 +23,27 @@ export const renderLogin = (container: HTMLElement): (() => void) => {
 		QRContainer.classList.add("blur");
 	};
 
-	const drawQRCode = async (url?: string) => {
+	const drawQRCode = async (url: string) => {
 		QRContainer.classList.remove("blur");
+
+		const qr = new QRCode({
+			data: url,
+			type: "svg",
+			width: 256 * devicePixelRatio,
+			height: 256 * devicePixelRatio,
+			dotsOptions: {
+				color: getCSSColor("--blurple"),
+				type: "rounded"
+			},
+			backgroundOptions: {
+				color: "#FFFFFF"
+			},
+			imageOptions: {
+				margin: 4
+			}
+		});
+
+		qr.append(QRContainer as HTMLElement);
 	};
 
 	const handleQR = async (event: Event) => {
@@ -31,11 +52,12 @@ export const renderLogin = (container: HTMLElement): (() => void) => {
 	};
 
 	const handleUserDetected = (event: Event) => {
-		const user = (event as CustomEvent<any>).detail;
 		blurQR();
+		const user = (event as CustomEvent<any>).detail;
 	};
 
 	const handleToken = async (event: Event) => {
+		blurQR();
 		const token = (event as CustomEvent<string>).detail;
 		console.log("Token received successfully");
 		store.setState({ token });
@@ -43,18 +65,17 @@ export const renderLogin = (container: HTMLElement): (() => void) => {
 
 	const handleCancel = () => {
 		console.warn("Authentication cancelled by user.");
-		blurQR();
+		refresh();
 	};
 
 	const handleError = (error: Event) => {
 		const detail = (error as CustomEvent<any>).detail;
 		console.error("Remote auth error:", detail);
-		blurQR();
+		refresh();
 	};
 
 	const handleClose = () => {
 		console.warn("Remote auth connection closed.");
-		blurQR();
 	};
 
 	discordClient.remoteAuth.addEventListener("qr", handleQR);

@@ -1,0 +1,46 @@
+form {
+	display: grid;
+	grid-template-columns: repeat(2, 1fr);
+	grid-template-rows: 1fr;
+}
+
+.passwordcontainer {
+	grid-column: 1;
+	grid-row: 1;
+
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+
+}
+
+.passwordcontainer input {
+	width: 100%;
+	height: 2rem;
+
+	border-radius: 0.5rem;
+}
+
+.qrcontainer {
+	grid-column: 2;
+	grid-row: 1;
+
+	display: grid;
+	grid-template-columns: 1fr;
+	grid-template-rows: 1fr 2rem;
+}
+
+.qrcontainer svg {
+	grid-column: 1;
+	grid-row: 1;
+
+	width: 15rem;
+	height: 15rem;
+
+	border-radius: 0.5rem;
+}
+
+.qrcontainer.blur svg {
+	filter: blur(0.5rem);
+}

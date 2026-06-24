@@ -1,6 +1,7 @@
 @import url("/styles/font.css");
+@import url("/components/login/login.css");
 
-body {
+:root {
 	/* COLORS */
 	--background: 0, 0%, 100%;
 	--text: 0, 0%, 0%;
@@ -13,7 +14,7 @@ body {
 }
 
 @media (prefers-color-scheme: dark) {
-	body {
+	:root {
 		--background: 0, 0%, 0%;
 		--text: 0, 0%, 100%;
 	}
