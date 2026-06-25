@@ -7,8 +7,12 @@
 	/* COLORS */
 	--background: 0, 0%, 0%;
 	--text: 0, 0%, 100%;
+
 	--blurple: 235, 86%, 65%;
 	--blurple-hexa: #5865F2;
+
+	--warning: 40, 100%, 60%;
+	--error: 10, 100%, 50%;
 	/* COLORS */
 
 	/* FONT */

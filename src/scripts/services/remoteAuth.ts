@@ -5,7 +5,8 @@ import {
 	arrayBufferToBase64,
 	base64ToArrayBuffer,
 	base64URLEncode,
-	base64URLDecode
+	base64URLDecode,
+	fake
 } from "/scripts/lib/utils.ts";
 
 export class RemoteAuthClient extends EventTarget {
@@ -24,8 +25,8 @@ export class RemoteAuthClient extends EventTarget {
 			const oldRemoteWebSocketID = sessionStorage.getItem("discord_remote_ws_id");
 			if (oldRemoteWebSocketID) {
 				try {
-					const oldWs = new WebSocket(Number(oldRemoteWebSocketID), new Set());
-					oldWs.disconnect().catch(() => { });
+					const oldWebSocket = new WebSocket(Number(oldRemoteWebSocketID), new Set());
+					oldWebSocket.disconnect().catch(() => { });
 				} catch (_error) { }
 				sessionStorage.removeItem("discord_remote_ws_id");
 			}
@@ -46,7 +47,8 @@ export class RemoteAuthClient extends EventTarget {
 
 			this.ws = await WebSocket.connect("wss://remote-auth-gateway.discord.gg/?v=2", {
 				headers: {
-					"Origin": "https://discord.com"
+					"Origin": "https://discord.com",
+					"User-Agent": fake.browser_user_agent
 				}
 			});
 			sessionStorage.setItem("discord_remote_ws_id", this.ws.id.toString());
@@ -147,6 +149,10 @@ export class RemoteAuthClient extends EventTarget {
 			case "pending_login":
 				try {
 					const ticketResponse = await this.client.rest.request("/users/@me/remote-auth/login", {
+						headers: {
+							"Origin": "https://discord.com",
+							"User-Agent": fake.browser_user_agent
+						},
 						method: "POST",
 						body: JSON.stringify({
 							ticket: message.ticket

@@ -1,7 +1,8 @@
 import { DiscordClient } from "/scripts/services/discord.ts";
 import { store } from "/scripts/store/store.ts";
-import { renderLogin } from "/components/login/login.ts";
+
 import { renderApp } from "/components/app/app.ts";
+import { renderLogin } from "/components/login/login.ts";
 
 export const discordClient = new DiscordClient(new URL("https://discord.com/api/v9"));
 
@@ -44,10 +45,12 @@ addEventListener("beforeunload", () => {
 addEventListener("keydown", async (event) => {
 	if (event.key === "F5" || ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "r")) {
 		event.preventDefault();
+
 		discordClient.isUnloading = true;
 		try {
 			await discordClient.disconnect(false);
 		} catch (_error) { }
+
 		location.reload();
 	}
 });
