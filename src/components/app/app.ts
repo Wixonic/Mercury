@@ -9,6 +9,7 @@ const init = () => {
 };
 
 export const renderApp = (container: HTMLElement): (() => void) => {
+	document.body.setAttribute("state", "app");
 	container.innerHTML = html;
 
 	const user = store.getState().currentUser;

@@ -8,6 +8,7 @@ import icon from "../../../src-tauri/icons/icon.svg";
 import html from "./login.html";
 
 export const renderLogin = (container: HTMLElement): (() => void) => {
+	document.body.setAttribute("state", "login");
 	container.innerHTML = html;
 
 	const QRContainer = container.querySelector(".qrcontainer");
@@ -26,7 +27,7 @@ export const renderLogin = (container: HTMLElement): (() => void) => {
 
 	const drawQRCode = async (url: string) => {
 		QRContainer.classList.remove("blur");
-		QRContainer.querySelectorAll("svg").forEach((el) => el.remove());
+		QRContainer.innerHTML = "";
 
 		const qr = new QRCode({
 			data: url,
@@ -35,18 +36,18 @@ export const renderLogin = (container: HTMLElement): (() => void) => {
 			},
 			image: "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7",
 			imageOptions: {
-				imageSize: 0.4,
-				margin: -16
+				imageSize: 0.3,
+				margin: 4
 			},
 			type: "svg",
-			width: 256 * devicePixelRatio,
-			height: 256 * devicePixelRatio,
+			width: 512 * devicePixelRatio,
+			height: 512 * devicePixelRatio,
 			dotsOptions: {
-				color: getCSSVariable("--blurple"),
+				color: "currentColor",
 				type: "rounded"
 			},
 			backgroundOptions: {
-				color: "#FFFFFF"
+				color: "#000"
 			}
 		});
 
@@ -75,9 +76,9 @@ export const renderLogin = (container: HTMLElement): (() => void) => {
 		await drawQRCode(url);
 	};
 
-	const handleUserDetected = (event: Event) => {
+	const handleUserDetected = (_event: Event) => {
 		blurQR();
-		const user = (event as CustomEvent<any>).detail;
+		// const user = (event as CustomEvent<any>).detail;
 	};
 
 	const handleToken = async (event: Event) => {
@@ -98,16 +99,11 @@ export const renderLogin = (container: HTMLElement): (() => void) => {
 		refresh();
 	};
 
-	const handleClose = () => {
-		console.warn("Remote auth connection closed.");
-	};
-
 	discordClient.remoteAuth.addEventListener("qr", handleQR);
 	discordClient.remoteAuth.addEventListener("user_detected", handleUserDetected);
 	discordClient.remoteAuth.addEventListener("token", handleToken);
 	discordClient.remoteAuth.addEventListener("cancel", handleCancel);
 	discordClient.remoteAuth.addEventListener("error", handleError);
-	discordClient.remoteAuth.addEventListener("close", handleClose);
 
 	discordClient.remoteAuth.init();
 
@@ -117,7 +113,6 @@ export const renderLogin = (container: HTMLElement): (() => void) => {
 		discordClient.remoteAuth.removeEventListener("token", handleToken);
 		discordClient.remoteAuth.removeEventListener("cancel", handleCancel);
 		discordClient.remoteAuth.removeEventListener("error", handleError);
-		discordClient.remoteAuth.removeEventListener("close", handleClose);
 		discordClient.remoteAuth.cleanup();
 	};
 };

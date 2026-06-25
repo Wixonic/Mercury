@@ -6,11 +6,7 @@ import { renderApp } from "/components/app/app.ts";
 export const discordClient = new DiscordClient(new URL("https://discord.com/api/v9"));
 
 const main = () => {
-	const appContainer = document.querySelector("main");
-	if (!appContainer) {
-		console.error("Mount point <main> not found");
-		return;
-	}
+	const container = document.body;
 
 	let currentCleanup: (() => void) | null = null;
 	let currentToken: string | null = null;
@@ -33,8 +29,8 @@ const main = () => {
 			currentCleanup = null;
 		}
 
-		if (state.route === "login") currentCleanup = renderLogin(appContainer);
-		else if (state.route === "app") currentCleanup = renderApp(appContainer);
+		if (state.route === "login") currentCleanup = renderLogin(container);
+		else if (state.route === "app") currentCleanup = renderApp(container);
 	});
 };
 
