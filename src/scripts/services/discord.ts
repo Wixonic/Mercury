@@ -4,6 +4,7 @@ import { RemoteAuthClient } from "/scripts/services/remoteAuth.ts";
 import { Client, RestClient } from "/scripts/lib/client.ts";
 import { join } from "/scripts/lib/utils.ts";
 import { store } from "/scripts/store/store.ts";
+import type { Session } from "/scripts/store/store.ts";
 
 type GatewayMessage = {
 	code: number;
@@ -25,11 +26,17 @@ export class DiscordClient extends Client {
 	sessionId: string | undefined;
 	resumeGatewayURL: string | undefined;
 	sequence: number | null = null;
+	isUnloading = false;
 
 	constructor(restBaseURL: URL) {
 		super();
 		this.rest = new RestClient(restBaseURL);
 		this.remoteAuth = new RemoteAuthClient(this);
+
+		this.sessionId = sessionStorage.getItem("discord_session_id") || undefined;
+		this.resumeGatewayURL = sessionStorage.getItem("discord_resume_gateway_url") || undefined;
+		const seq = sessionStorage.getItem("discord_sequence");
+		this.sequence = seq ? parseInt(seq, 10) : null;
 	}
 
 	async init(token?: string) {
@@ -39,12 +46,17 @@ export class DiscordClient extends Client {
 		}
 
 		try {
-			const gatewayResponse = await this.rest.request("/gateway");
-			const gatewayData = await gatewayResponse.json();
-			console.log("Gateway response data:", gatewayData);
+			let gatewayURL = this.resumeGatewayURL;
+			if (!gatewayURL) {
+				const gatewayResponse = await this.rest.request("/gateway");
+				const gatewayData = await gatewayResponse.json();
+				console.log("Gateway response data:", gatewayData);
+				gatewayURL = gatewayData.url;
+			} else console.log("Using cached resume gateway URL:", gatewayURL);
 
 			try {
-				this.ws = await WebSocket.connect(join(gatewayData.url, "?v=9&encoding=json"));
+				this.ws = await WebSocket.connect(join(gatewayURL!, "?v=9&encoding=json"));
+				sessionStorage.setItem("discord_ws_id", String(this.ws.id));
 				this.ws.addListener(this.gateway.bind(this));
 			} catch (error) {
 				console.error("Failed to initialize Discord client:", error);
@@ -55,6 +67,7 @@ export class DiscordClient extends Client {
 	}
 
 	async reconnect() {
+		if (this.isUnloading) return;
 		try {
 			const gatewayURL = this.resumeGatewayURL ?? (await (await this.rest.request("/gateway")).json()).url;
 
@@ -62,25 +75,25 @@ export class DiscordClient extends Client {
 			this.ws.addListener(this.gateway.bind(this));
 		} catch (error) {
 			console.error("Failed to reconnect:", error);
-			setTimeout(() => this.reconnect(), 5000);
+			if (!this.isUnloading) setTimeout(() => this.reconnect(), 5000);
 		}
 	}
 
-	async disconnect() {
+	async disconnect(reconnect = true) {
 		if (this.heartbeat) clearInterval(this.heartbeat);
 		this.heartbeat = undefined;
 
 		if (this.ws) {
+			const wsToDisconnect = this.ws;
+			this.ws = undefined;
 			try {
-				await this.ws.disconnect();
+				await wsToDisconnect.disconnect();
 			} catch (error) {
 				console.error("Failed to disconnect WebSocket:", error);
 			}
-
-			this.ws = undefined;
 		}
 
-		this.reconnect();
+		if (reconnect) this.reconnect();
 	}
 
 	parseGatewayMessage(rawMessage: WebSocketMessage): GatewayMessage | null {
@@ -104,7 +117,10 @@ export class DiscordClient extends Client {
 	async gateway(rawMessage: WebSocketMessage) {
 		if (rawMessage.type === "Close") {
 			console.log("WebSocket connection closed:", rawMessage.data);
-			this.disconnect();
+			if (this.heartbeat) clearInterval(this.heartbeat);
+			this.heartbeat = undefined;
+			this.ws = undefined;
+			if (!this.isUnloading) this.reconnect();
 			return;
 		}
 
@@ -114,17 +130,41 @@ export class DiscordClient extends Client {
 		switch (message.code) {
 			case 0: // Dispatch
 				this.sequence = message.sequence;
+				if (this.sequence !== null) sessionStorage.setItem("discord_sequence", this.sequence.toString());
 				console.log("Dispatch Event:", message.event);
 
-				if (message.event === "READY") {
-					this.sessionId = message.data.session_id;
-					this.resumeGatewayURL = message.data.resume_gateway_url;
-					console.log("Ready - Session ID:", this.sessionId);
+				switch (message.event) {
+					case "READY":
+						this.sessionId = message.data.session_id;
+						this.resumeGatewayURL = message.data.resume_gateway_url;
+						console.log("Ready - Session ID:", this.sessionId);
 
-					store.setState({
-						currentUser: message.data.user,
-						route: "app"
-					});
+						sessionStorage.setItem("discord_session_id", this.sessionId!);
+						sessionStorage.setItem("discord_resume_gateway_url", this.resumeGatewayURL!);
+
+						store.setState({
+							currentUser: message.data.user,
+							route: "app"
+						});
+						break;
+
+					case "SESSIONS_REPLACE":
+						const sessions: Session[] = message.data;
+						const currentSession = sessions.find((session) => session.session_id === this.sessionId) ?? sessions.find((session) => session.active);
+
+						store.setState({
+							sessions,
+							currentPresence: currentSession?.status ?? null
+						});
+
+						this.dispatchEvent(new CustomEvent("presenceUpdate", {
+							detail: currentSession?.status ?? null
+						}));
+						break;
+
+					default:
+						console.log("Unhandled dispatch event:", message.event, "with data:", message.data);
+						break;
 				}
 				break;
 
@@ -138,6 +178,9 @@ export class DiscordClient extends Client {
 				else {
 					this.sessionId = undefined;
 					this.sequence = null;
+					sessionStorage.removeItem("discord_session_id");
+					sessionStorage.removeItem("discord_sequence");
+					sessionStorage.removeItem("discord_resume_gateway_url");
 					if (this.token) this.sendIdentify();
 				}
 				break;

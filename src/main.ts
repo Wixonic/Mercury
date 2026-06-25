@@ -35,3 +35,7 @@ const main = () => {
 };
 
 addEventListener("DOMContentLoaded", main);
+
+addEventListener("keydown", (event) => {
+	if (event.key === "F5" || ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "r")) location.reload();
+});

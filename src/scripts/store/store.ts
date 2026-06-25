@@ -1,16 +1,34 @@
+export type PresenceStatus = "online" | "idle" | "dnd" | "invisible" | "offline";
+
+export interface Session {
+	session_id: string;
+	status: PresenceStatus;
+	activities: any[];
+	client_info: {
+		os: string;
+		client: string;
+		version: number;
+	};
+	active: boolean;
+}
+
 export interface AppState {
 	route: "login" | "app";
 	token: string | null;
 	currentUser: any | null;
+	sessions: Session[];
+	currentPresence: PresenceStatus | null;
 }
 
 type StateListener = (state: AppState) => void;
 
 class Store {
 	private state: AppState = {
-		route: "login",
+		route: localStorage.getItem("discord_token") ? "app" : "login",
 		token: localStorage.getItem("discord_token"),
-		currentUser: null
+		currentUser: null,
+		sessions: [],
+		currentPresence: null
 	};
 
 	private listeners: Set<StateListener> = new Set();

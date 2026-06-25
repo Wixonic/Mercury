@@ -1,6 +1,6 @@
 import { ClientOptions, fetch } from "@tauri-apps/plugin-http";
 
-export class Client { };
+export class Client extends EventTarget { };
 
 export class RestClient extends Client {
 	baseURL: URL;
