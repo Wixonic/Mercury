@@ -36,6 +36,18 @@ const main = () => {
 
 addEventListener("DOMContentLoaded", main);
 
-addEventListener("keydown", (event) => {
-	if (event.key === "F5" || ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "r")) location.reload();
+addEventListener("beforeunload", () => {
+	discordClient.isUnloading = true;
+	discordClient.disconnect(false);
+});
+
+addEventListener("keydown", async (event) => {
+	if (event.key === "F5" || ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "r")) {
+		event.preventDefault();
+		discordClient.isUnloading = true;
+		try {
+			await discordClient.disconnect(false);
+		} catch (_error) { }
+		location.reload();
+	}
 });

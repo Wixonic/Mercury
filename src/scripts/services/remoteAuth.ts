@@ -21,7 +21,16 @@ export class RemoteAuthClient extends EventTarget {
 
 	async init() {
 		try {
-			this.keyPair = await window.crypto.subtle.generateKey(
+			const oldRemoteWebSocketID = sessionStorage.getItem("discord_remote_ws_id");
+			if (oldRemoteWebSocketID) {
+				try {
+					const oldWs = new WebSocket(Number(oldRemoteWebSocketID), new Set());
+					oldWs.disconnect().catch(() => { });
+				} catch (_error) { }
+				sessionStorage.removeItem("discord_remote_ws_id");
+			}
+
+			this.keyPair = await crypto.subtle.generateKey(
 				{
 					name: "RSA-OAEP",
 					modulusLength: 2048,
@@ -32,7 +41,7 @@ export class RemoteAuthClient extends EventTarget {
 				["decrypt"]
 			);
 
-			const spki = await window.crypto.subtle.exportKey("spki", this.keyPair.publicKey);
+			const spki = await crypto.subtle.exportKey("spki", this.keyPair.publicKey);
 			const encodedPublicKey = arrayBufferToBase64(spki);
 
 			this.ws = await WebSocket.connect("wss://remote-auth-gateway.discord.gg/?v=2", {
@@ -40,6 +49,8 @@ export class RemoteAuthClient extends EventTarget {
 					"Origin": "https://discord.com"
 				}
 			});
+			sessionStorage.setItem("discord_remote_ws_id", this.ws.id.toString());
+
 			this.ws.addListener(async (rawMessage: WebSocketMessage) => {
 				if (rawMessage.type === "Close") {
 					console.log("Remote Auth WebSocket connection closed:", rawMessage.data);
@@ -83,13 +94,13 @@ export class RemoteAuthClient extends EventTarget {
 			case "nonce_proof":
 				try {
 					const encryptedBytes = base64ToArrayBuffer(message.encrypted_nonce);
-					const decryptedBytes = await window.crypto.subtle.decrypt(
+					const decryptedBytes = await crypto.subtle.decrypt(
 						{ name: "RSA-OAEP" },
 						this.keyPair!.privateKey,
 						encryptedBytes
 					);
 
-					const hashBuffer = await window.crypto.subtle.digest("SHA-256", decryptedBytes);
+					const hashBuffer = await crypto.subtle.digest("SHA-256", decryptedBytes);
 					const proof = base64URLEncode(hashBuffer);
 
 					this.send({
@@ -110,7 +121,7 @@ export class RemoteAuthClient extends EventTarget {
 			case "pending_ticket":
 				try {
 					const encryptedBytes = base64URLDecode(message.encrypted_user_payload);
-					const decryptedBytes = await window.crypto.subtle.decrypt(
+					const decryptedBytes = await crypto.subtle.decrypt(
 						{ name: "RSA-OAEP" },
 						this.keyPair!.privateKey,
 						encryptedBytes
@@ -144,7 +155,7 @@ export class RemoteAuthClient extends EventTarget {
 
 					const ticketData = await ticketResponse.json();
 					const encryptedBytes = base64URLDecode(ticketData.encrypted_token);
-					const decryptedBytes = await window.crypto.subtle.decrypt(
+					const decryptedBytes = await crypto.subtle.decrypt(
 						{ name: "RSA-OAEP" },
 						this.keyPair!.privateKey,
 						encryptedBytes
@@ -187,6 +198,7 @@ export class RemoteAuthClient extends EventTarget {
 				console.error("Failed to disconnect Remote Auth WebSocket:", error);
 			});
 			this.ws = undefined;
+			sessionStorage.removeItem("discord_remote_ws_id");
 		}
 	}
 };

@@ -16,9 +16,9 @@
 				"title": "Mercury",
 				"width": 800,
 				"height": 600,
-				"titleBarStyle": "Transparent",
+				"titleBarStyle": "Overlay",
 				"hiddenTitle": true,
-				"backgroundColor": "#161620"
+				"theme": "Dark"
 			}
 		],
 		"security": {

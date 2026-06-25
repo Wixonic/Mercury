@@ -1,11 +1,13 @@
 import { store } from "/scripts/store/store.ts";
 import html from "./app.html";
 
+import { discordClient } from "/main.ts";
+
 const init = () => {
 	const user = store.getState().currentUser;
 	if (!user) return;
 
-	console.log(user);
+	console.log(user, discordClient);
 };
 
 export const renderApp = (container: HTMLElement): (() => void) => {

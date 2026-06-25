@@ -1,5 +1,7 @@
 @import url("/styles/font.css");
+
 @import url("/components/login/login.css");
+@import url("/components/app/app.css");
 
 :root {
 	/* COLORS */

@@ -1,8 +1,11 @@
 import WebSocket, { Message as WebSocketMessage } from "@tauri-apps/plugin-websocket";
 
 import { RemoteAuthClient } from "/scripts/services/remoteAuth.ts";
+
 import { Client, RestClient } from "/scripts/lib/client.ts";
-import { join } from "/scripts/lib/utils.ts";
+import { join, wait } from "/scripts/lib/utils.ts";
+
+
 import { store } from "/scripts/store/store.ts";
 import type { Session } from "/scripts/store/store.ts";
 
@@ -27,6 +30,11 @@ export class DiscordClient extends Client {
 	resumeGatewayURL: string | undefined;
 	sequence: number | null = null;
 	isUnloading = false;
+	helloWatchdog: ReturnType<typeof setTimeout> | undefined;
+	unlistenGateway: (() => void) | undefined;
+
+	private reconnectTimeout = 1000;
+	private helloTimeout = 3500;
 
 	constructor(restBaseURL: URL) {
 		super();
@@ -39,6 +47,16 @@ export class DiscordClient extends Client {
 		this.sequence = seq ? parseInt(seq, 10) : null;
 	}
 
+	startHelloWatchdog() {
+		if (this.helloWatchdog) clearTimeout(this.helloWatchdog);
+		this.helloWatchdog = setTimeout(() => {
+			console.warn("Did not receive Hello in time. Clearing resume URL and forcing fallback reconnect...");
+			this.resumeGatewayURL = undefined;
+			sessionStorage.removeItem("discord_resume_gateway_url");
+			this.disconnect(true);
+		}, this.helloTimeout);
+	}
+
 	async init(token?: string) {
 		if (token) {
 			this.token = token;
@@ -46,6 +64,25 @@ export class DiscordClient extends Client {
 		}
 
 		try {
+			const oldWebSocketID = sessionStorage.getItem("discord_ws_id");
+
+			if (oldWebSocketID) {
+				try {
+					const oldWebSocket = new WebSocket(Number(oldWebSocketID), new Set());
+					await Promise.race([
+						oldWebSocket.disconnect(),
+						wait(500)
+					]);
+
+					console.log("Sent disconnect command to old WebSocket:", oldWebSocketID);
+
+					await wait(500);
+				} catch (error) {
+					console.warn("Failed to recreate old WebSocket:", error);
+				}
+				sessionStorage.removeItem("discord_ws_id");
+			}
+
 			let gatewayURL = this.resumeGatewayURL;
 			if (!gatewayURL) {
 				const gatewayResponse = await this.rest.request("/gateway");
@@ -56,8 +93,9 @@ export class DiscordClient extends Client {
 
 			try {
 				this.ws = await WebSocket.connect(join(gatewayURL!, "?v=9&encoding=json"));
-				sessionStorage.setItem("discord_ws_id", String(this.ws.id));
-				this.ws.addListener(this.gateway.bind(this));
+				this.unlistenGateway = this.ws.addListener(this.gateway.bind(this));
+				sessionStorage.setItem("discord_ws_id", this.ws.id.toString());
+				this.startHelloWatchdog();
 			} catch (error) {
 				console.error("Failed to initialize Discord client:", error);
 			}
@@ -71,8 +109,10 @@ export class DiscordClient extends Client {
 		try {
 			const gatewayURL = this.resumeGatewayURL ?? (await (await this.rest.request("/gateway")).json()).url;
 
-			this.ws = await WebSocket.connect(join(gatewayURL, "?v=10&encoding=json"));
-			this.ws.addListener(this.gateway.bind(this));
+			this.ws = await WebSocket.connect(join(gatewayURL, "?v=9&encoding=json"));
+			this.unlistenGateway = this.ws.addListener(this.gateway.bind(this));
+			sessionStorage.setItem("discord_ws_id", this.ws.id.toString());
+			this.startHelloWatchdog();
 		} catch (error) {
 			console.error("Failed to reconnect:", error);
 			if (!this.isUnloading) setTimeout(() => this.reconnect(), 5000);
@@ -82,18 +122,28 @@ export class DiscordClient extends Client {
 	async disconnect(reconnect = true) {
 		if (this.heartbeat) clearInterval(this.heartbeat);
 		this.heartbeat = undefined;
+		if (this.helloWatchdog) clearTimeout(this.helloWatchdog);
+		this.helloWatchdog = undefined;
+
+		if (this.unlistenGateway) {
+			this.unlistenGateway();
+			this.unlistenGateway = undefined;
+		}
 
 		if (this.ws) {
 			const wsToDisconnect = this.ws;
 			this.ws = undefined;
 			try {
-				await wsToDisconnect.disconnect();
+				await Promise.race([
+					wsToDisconnect.disconnect(),
+					new Promise((resolve) => setTimeout(resolve, 500))
+				]);
 			} catch (error) {
 				console.error("Failed to disconnect WebSocket:", error);
 			}
 		}
 
-		if (reconnect) this.reconnect();
+		if (reconnect) setTimeout(() => this.reconnect(), this.reconnectTimeout);
 	}
 
 	parseGatewayMessage(rawMessage: WebSocketMessage): GatewayMessage | null {
@@ -116,11 +166,8 @@ export class DiscordClient extends Client {
 
 	async gateway(rawMessage: WebSocketMessage) {
 		if (rawMessage.type === "Close") {
-			console.log("WebSocket connection closed:", rawMessage.data);
-			if (this.heartbeat) clearInterval(this.heartbeat);
-			this.heartbeat = undefined;
-			this.ws = undefined;
-			if (!this.isUnloading) this.reconnect();
+			console.error("WebSocket connection closed:", rawMessage.data);
+			this.reconnect();
 			return;
 		}
 
@@ -131,16 +178,16 @@ export class DiscordClient extends Client {
 			case 0: // Dispatch
 				this.sequence = message.sequence;
 				if (this.sequence !== null) sessionStorage.setItem("discord_sequence", this.sequence.toString());
-				console.log("Dispatch Event:", message.event);
 
 				switch (message.event) {
 					case "READY":
 						this.sessionId = message.data.session_id;
 						this.resumeGatewayURL = message.data.resume_gateway_url;
-						console.log("Ready - Session ID:", this.sessionId);
 
 						sessionStorage.setItem("discord_session_id", this.sessionId!);
 						sessionStorage.setItem("discord_resume_gateway_url", this.resumeGatewayURL!);
+
+						console.info("Ready - Session ID:", this.sessionId);
 
 						store.setState({
 							currentUser: message.data.user,
@@ -157,23 +204,26 @@ export class DiscordClient extends Client {
 							currentPresence: currentSession?.status ?? null
 						});
 
+						console.log("Sessions Replaced");
+
 						this.dispatchEvent(new CustomEvent("presenceUpdate", {
 							detail: currentSession?.status ?? null
 						}));
 						break;
 
 					default:
-						console.log("Unhandled dispatch event:", message.event, "with data:", message.data);
+						console.warn("Unhandled dispatch event:", message.event, "with data:", message.data);
 						break;
 				}
 				break;
 
 			case 7: // Reconnect
+				console.warn("Reconnect requested by server");
 				this.disconnect();
 				break;
 
 			case 9: // Invalid Session
-				console.log("Invalid Session:", message.data);
+				console.warn("Invalid Session");
 				if (message.data === true) this.sendResume();
 				else {
 					this.sessionId = undefined;
@@ -181,11 +231,15 @@ export class DiscordClient extends Client {
 					sessionStorage.removeItem("discord_session_id");
 					sessionStorage.removeItem("discord_sequence");
 					sessionStorage.removeItem("discord_resume_gateway_url");
-					if (this.token) this.sendIdentify();
+					if (this.token) setTimeout(() => this.sendIdentify(), this.reconnectTimeout);
 				}
 				break;
 
 			case 10: // Hello
+				if (this.helloWatchdog) {
+					clearTimeout(this.helloWatchdog);
+					this.helloWatchdog = undefined;
+				}
 				this.sendHeartbeat();
 				this.heartbeat = setInterval(() => this.sendHeartbeat(), message.data.heartbeat_interval);
 

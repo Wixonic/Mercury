@@ -1,0 +1,38 @@
+body[state="app"] {
+	display: grid;
+	grid-template-rows: 2rem 1fr 5rem;
+	grid-template-columns: 5rem 10rem 1fr;
+}
+
+header.titlebar {
+	grid-column: 1 / -1;
+	grid-row: 1;
+
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: 100%;
+
+	user-select: none;
+}
+
+header.titlebar h1.location {
+	font-size: 0.85rem;
+	font-weight: 600;
+	margin: 0;
+}
+
+aside.sidebar {
+	grid-column: 1;
+	grid-row: 2 / -1;
+}
+
+main {
+	grid-column: 2 / -1;
+	grid-row: 2 / -1;
+
+	border: 0.1rem solid hsla(var(--text), 10%);
+	border-top-left-radius: 0.5rem;
+
+	padding: 0.5rem;
+}
