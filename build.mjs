@@ -40,6 +40,7 @@ const sharedOptions = {
 	plugins: [absoluteImportPlugin],
 	loader: {
 		".html": "text",
+		".svg": "text",
 	},
 };
 

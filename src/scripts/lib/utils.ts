@@ -44,15 +44,15 @@ export const base64URLDecode = (base64URL: string): ArrayBuffer => {
 	return base64ToArrayBuffer(base64);
 };
 
-export const getCSSColor = (variableName: string, fallback?: string): string => {
+export const getCSSVariable = (variableName: string, fallback?: string): string => {
 	const element = document.body || document.documentElement;
 	const rootStyles = getComputedStyle(element);
-	const colorValue = rootStyles.getPropertyValue(variableName).trim();
+	const value = rootStyles.getPropertyValue(variableName).trim();
 
-	if (!colorValue) {
+	if (!value) {
 		if (fallback) return fallback;
 		throw new Error(`CSS variable ${variableName} not found.`);
 	}
 
-	return colorValue;
+	return value;
 };

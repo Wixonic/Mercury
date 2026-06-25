@@ -41,6 +41,10 @@ form {
 	border-radius: 0.5rem;
 }
 
+.qrcontainer svg svg {
+	color: var(--blurple);
+}
+
 .qrcontainer.blur svg {
 	filter: blur(0.5rem);
 }

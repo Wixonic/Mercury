@@ -2,7 +2,8 @@ import QRCode from "qr-code-styling";
 
 import { discordClient } from "/main.ts";
 import { store } from "/scripts/store/store.ts";
-import { getCSSColor } from "/scripts/lib/utils.ts";
+import { getCSSVariable } from "/scripts/lib/utils.ts";
+import icon from "../../../src-tauri/icons/icon.svg";
 
 import html from "./login.html";
 
@@ -25,25 +26,48 @@ export const renderLogin = (container: HTMLElement): (() => void) => {
 
 	const drawQRCode = async (url: string) => {
 		QRContainer.classList.remove("blur");
+		QRContainer.querySelectorAll("svg").forEach((el) => el.remove());
 
 		const qr = new QRCode({
 			data: url,
+			qrOptions: {
+				errorCorrectionLevel: "H"
+			},
+			image: "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7",
+			imageOptions: {
+				imageSize: 0.4,
+				margin: -16
+			},
 			type: "svg",
 			width: 256 * devicePixelRatio,
 			height: 256 * devicePixelRatio,
 			dotsOptions: {
-				color: getCSSColor("--blurple"),
+				color: getCSSVariable("--blurple"),
 				type: "rounded"
 			},
 			backgroundOptions: {
 				color: "#FFFFFF"
-			},
-			imageOptions: {
-				margin: 4
 			}
 		});
 
-		qr.append(QRContainer as HTMLElement);
+		const svg: Blob = await qr.getRawData("svg");
+		const svgHTML = await svg.text();
+		const svgElement = new DOMParser().parseFromString(svgHTML, "image/svg+xml").documentElement;
+
+		const imageElement = svgElement.querySelector("image");
+		if (!imageElement) throw new Error("QR code image element not found");
+
+		const parser = new DOMParser();
+		const iconElement = parser.parseFromString(icon, "image/svg+xml").documentElement;
+
+		iconElement.setAttribute("x", imageElement.getAttribute("x")!);
+		iconElement.setAttribute("y", imageElement.getAttribute("y")!);
+		iconElement.setAttribute("width", imageElement.getAttribute("width")!);
+		iconElement.setAttribute("height", imageElement.getAttribute("height")!);
+
+		imageElement.replaceWith(iconElement);
+
+		QRContainer.appendChild(svgElement);
 	};
 
 	const handleQR = async (event: Event) => {
