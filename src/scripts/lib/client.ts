@@ -20,7 +20,7 @@ export class RestClient extends Client {
 			headers: {
 				...this.headers,
 				...options?.headers
-			}
+			},
 		});
 
 		if (!response.ok) {

@@ -54,6 +54,21 @@ nav.sidebar {
 	grid-row: 2 / -1;
 }
 
+nav.sidebar button {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+
+	width: 2.5rem;
+	height: 2.5rem;
+
+	font-size: 1.25rem;
+	font-weight: 600;
+
+	margin: 1.25rem;
+	padding: 0.5rem;
+}
+
 main {
 	grid-column: 2 / -1;
 	grid-row: 2 / -1;

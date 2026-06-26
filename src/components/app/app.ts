@@ -1,4 +1,3 @@
-import { store } from "/scripts/store/store.ts";
 import html from "./app.html";
 
 import { discordClient } from "/main.ts";
@@ -8,16 +7,27 @@ const changeState = (state?: string, color: string = "text", force: boolean = fa
 	const stateElement = document.querySelector("header.titlebar aside.state");
 	if (!stateElement) return;
 	if (state) stateElement.innerHTML = `<span style="color: hsla(var(--${color}));">${state}</span>`;
-	else if (currentState === undefined || force && discordClient.ping !== undefined) stateElement.innerHTML = `<span style="color: hsla(var(--${color}), 50%);">Connected — ${discordClient.ping} ms</span>`;
+	else if (currentState === undefined || force && discordClient.ping !== undefined) stateElement.innerHTML = `<span style="color: hsla(var(--${color}), 50%);">Connected - ${discordClient.ping} ms</span>`;
 
 	currentState = state;
 };
 
-const init = () => {
-	const user = store.getState().currentUser;
-	if (!user) return;
+const ready = async () => {
+	changeState("Fetching settings", "warning");
+	await discordClient.fetchSettings();
 
-	console.log(user, discordClient);
+	console.log("Settings:", discordClient.settings);
+
+	changeState("Sending status", "warning");
+	await discordClient.send({
+		"op": 3,
+		"d": {
+			"since": null,
+			"activities": [],
+			"status": "online",
+			"afk": false
+		}
+	});
 
 	changeState(undefined, undefined, true);
 };
@@ -30,9 +40,9 @@ export const renderApp = (container: HTMLElement): (() => void) => {
 
 	const handleHeartbeat = (_event: Event) => changeState();
 	const handleConnecting = (_event: Event) => changeState("Connecting", "warning");
-	const handleReady = (_event: Event) => changeState(undefined, undefined, true);
+	const handleReady = (_event: Event) => ready();
 	const handleDisconnected = (_event: Event) => changeState("Disconnected", "error");
-	const handleResumed = (_event: Event) => changeState(undefined, undefined, true);
+	const handleResumed = (_event: Event) => ready();
 
 	discordClient.addEventListener("heartbeat", handleHeartbeat);
 	discordClient.addEventListener("connecting", handleConnecting);
@@ -40,20 +50,7 @@ export const renderApp = (container: HTMLElement): (() => void) => {
 	discordClient.addEventListener("disconnected", handleDisconnected);
 	discordClient.addEventListener("resumed", handleResumed);
 
-	const user = store.getState().currentUser;
-	let unsubscribe: (() => void) | null = null;
-	if (user) init();
-	else {
-		unsubscribe = store.subscribe((state) => {
-			if (state.currentUser) {
-				init();
-				if (unsubscribe) {
-					unsubscribe();
-					unsubscribe = null;
-				}
-			}
-		});
-	}
+	if (discordClient.ws && discordClient.sessionId) ready();
 
 	return () => {
 		discordClient.removeEventListener("heartbeat", handleHeartbeat);
@@ -61,6 +58,5 @@ export const renderApp = (container: HTMLElement): (() => void) => {
 		discordClient.removeEventListener("ready", handleReady);
 		discordClient.removeEventListener("disconnected", handleDisconnected);
 		discordClient.removeEventListener("resumed", handleResumed);
-		if (unsubscribe) unsubscribe();
 	};
 };
