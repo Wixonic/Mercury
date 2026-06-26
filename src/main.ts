@@ -11,6 +11,7 @@ const main = () => {
 
 	let currentCleanup: (() => void) | null = null;
 	let currentToken: string | null = null;
+	let currentRoute: "login" | "app" | null = null;
 
 	store.subscribe((state) => {
 		if (state.token && state.token !== currentToken) {
@@ -21,17 +22,21 @@ const main = () => {
 	});
 
 	store.subscribe((state) => {
-		if (currentCleanup) {
-			try {
-				currentCleanup();
-			} catch (error) {
-				console.error("Error cleaning up previous view:", error);
-			}
-			currentCleanup = null;
-		}
+		if (state.route !== currentRoute) {
+			currentRoute = state.route;
 
-		if (state.route === "login") currentCleanup = renderLogin(container);
-		else if (state.route === "app") currentCleanup = renderApp(container);
+			if (currentCleanup) {
+				try {
+					currentCleanup();
+				} catch (error) {
+					console.error("Error cleaning up previous view:", error);
+				}
+				currentCleanup = null;
+			}
+
+			if (state.route === "login") currentCleanup = renderLogin(container);
+			else if (state.route === "app") currentCleanup = renderApp(container);
+		}
 	});
 };
 

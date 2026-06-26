@@ -3,7 +3,7 @@ import WebSocket, { Message as WebSocketMessage } from "@tauri-apps/plugin-webso
 import { RemoteAuthClient } from "/scripts/services/remoteAuth.ts";
 
 import { Client, RestClient } from "/scripts/lib/client.ts";
-import { join, fake } from "/scripts/lib/utils.ts";
+import { join, fake, wait } from "/scripts/lib/utils.ts";
 
 
 import { store } from "/scripts/store/store.ts";
@@ -31,9 +31,9 @@ export class DiscordClient extends Client {
 	sequence: number | null = null;
 	isUnloading = false;
 	helloWatchdog: ReturnType<typeof setTimeout> | undefined;
+	unlistenGateway: (() => void) | undefined;
 
-	private reconnectTimeout = 1000;
-	private helloTimeout = 1500;
+	private helloTimeout = 2000;
 
 	constructor(restBaseURL: URL) {
 		super();
@@ -57,6 +57,24 @@ export class DiscordClient extends Client {
 		}, this.helloTimeout);
 	}
 
+	resetAndRedirectToLogin() {
+		this.token = undefined;
+		this.sessionId = undefined;
+		this.sequence = null;
+		this.resumeGatewayURL = undefined;
+		sessionStorage.removeItem("discord_session_id");
+		sessionStorage.removeItem("discord_sequence");
+		sessionStorage.removeItem("discord_resume_gateway_url");
+
+		store.setState({
+			token: null,
+			currentUser: null,
+			route: "login"
+		});
+
+		this.disconnect(false);
+	}
+
 	async init(token?: string) {
 		this.dispatchEvent(new CustomEvent("connecting"));
 
@@ -66,6 +84,19 @@ export class DiscordClient extends Client {
 		}
 
 		try {
+			// Validate token using REST request to /users/@me
+			try {
+				const userResponse = await this.rest.request("/users/@me");
+				const userData = await userResponse.json();
+				store.setState({ currentUser: userData });
+			} catch (error: any) {
+				console.error("Token verification failed:", error);
+				if (error.message && (error.message.includes("401") || error.message.includes("403"))) {
+					this.resetAndRedirectToLogin();
+					return;
+				}
+			}
+
 			let gatewayURL = this.resumeGatewayURL;
 			if (!gatewayURL) {
 				const gatewayResponse = await this.rest.request("/gateway");
@@ -78,15 +109,19 @@ export class DiscordClient extends Client {
 				this.ws = await WebSocket.connect(join(gatewayURL!, "?v=9&encoding=json"), {
 					headers: {
 						"Origin": "https://discord.com",
-						"User-Agent": fake.browser_user_agent
+						"User-Agent": navigator.userAgent
 					}
 				});
+				this.unlistenGateway = this.ws.addListener(this.gateway.bind(this));
 				this.startHelloWatchdog();
 			} catch (error) {
 				console.error("Failed to initialize Discord client:", error);
 			}
-		} catch (error) {
+		} catch (error: any) {
 			console.error("Failed to get Discord Gateway URL:", error);
+			if (error.message && (error.message.includes("401") || error.message.includes("403"))) {
+				this.resetAndRedirectToLogin();
+			}
 		}
 	}
 
@@ -99,14 +134,19 @@ export class DiscordClient extends Client {
 			this.ws = await WebSocket.connect(join(gatewayURL, "?v=9&encoding=json"), {
 				headers: {
 					"Origin": "https://discord.com",
-					"User-Agent": fake.browser_user_agent
+					"User-Agent": navigator.userAgent
 				}
 			});
+			this.unlistenGateway = this.ws.addListener(this.gateway.bind(this));
 			this.startHelloWatchdog();
-		} catch (error) {
+		} catch (error: any) {
 			console.error("Failed to reconnect:", error);
+			if (error.message && (error.message.includes("401") || error.message.includes("403"))) {
+				this.resetAndRedirectToLogin();
+				return;
+			}
 			this.dispatchEvent(new CustomEvent("disconnected", { detail: error }));
-			if (!this.isUnloading) setTimeout(() => this.reconnect(), 5000);
+			if (!this.isUnloading) this.reconnect();
 		}
 	}
 
@@ -118,20 +158,25 @@ export class DiscordClient extends Client {
 		if (this.helloWatchdog) clearTimeout(this.helloWatchdog);
 		this.helloWatchdog = undefined;
 
+		if (this.unlistenGateway) {
+			this.unlistenGateway();
+			this.unlistenGateway = undefined;
+		}
+
 		if (this.ws) {
 			const wsToDisconnect = this.ws;
 			this.ws = undefined;
 			try {
 				await Promise.race([
 					wsToDisconnect.disconnect(),
-					new Promise((resolve) => setTimeout(resolve, 500))
+					wait(500)
 				]);
 			} catch (error) {
 				console.error("Failed to disconnect WebSocket:", error);
 			}
 		}
 
-		if (reconnect) setTimeout(() => this.reconnect(), this.reconnectTimeout);
+		if (reconnect) this.reconnect();
 	}
 
 	parseGatewayMessage(rawMessage: WebSocketMessage): GatewayMessage | null {
@@ -155,6 +200,12 @@ export class DiscordClient extends Client {
 	async gateway(rawMessage: WebSocketMessage) {
 		if (rawMessage.type === "Close") {
 			console.error("WebSocket connection closed:", rawMessage.data);
+			const closeFrame = rawMessage.data;
+			if (closeFrame && (closeFrame.code === 4004 || closeFrame.code === 4014)) {
+				console.error(`Authentication failed (Close code: ${closeFrame.code}). Redirecting to login.`);
+				this.resetAndRedirectToLogin();
+				return;
+			}
 			this.reconnect();
 			return;
 		}
@@ -219,7 +270,7 @@ export class DiscordClient extends Client {
 					sessionStorage.removeItem("discord_session_id");
 					sessionStorage.removeItem("discord_sequence");
 					sessionStorage.removeItem("discord_resume_gateway_url");
-					if (this.token) setTimeout(() => this.sendIdentify(), this.reconnectTimeout);
+					if (this.token) this.sendIdentify();
 				}
 				break;
 
@@ -276,6 +327,10 @@ export class DiscordClient extends Client {
 	}
 
 	async sendIdentify() {
+		const lastIdentify = sessionStorage.getItem("discord_last_identify");
+		if (lastIdentify && (Date.now() - parseInt(lastIdentify, 10)) < 5000) await wait(5000 - (Date.now() - parseInt(lastIdentify, 10)));
+
+		sessionStorage.setItem("discord_last_identify", Date.now().toString());
 		this.send({
 			op: 2,
 			d: {
@@ -284,7 +339,7 @@ export class DiscordClient extends Client {
 					os: fake.os,
 					browser: fake.browser,
 					device: fake.device,
-					browser_user_agent: fake.browser_user_agent,
+					browser_user_agent: navigator.userAgent,
 					browser_version: fake.browser_version,
 					os_version: fake.os_version,
 					referrer: "",

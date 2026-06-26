@@ -1,11 +1,13 @@
 import QRCode from "qr-code-styling";
+import { invoke } from "@tauri-apps/api/core";
+import { listen } from "@tauri-apps/api/event";
+import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 
 import { discordClient } from "/main.ts";
 import { store } from "/scripts/store/store.ts";
-import { getCSSVariable } from "/scripts/lib/utils.ts";
-import icon from "../../../src-tauri/icons/icon.svg";
 
 import html from "./login.html";
+import icon from "../../../src-tauri/icons/icon.svg";
 
 export const renderLogin = (container: HTMLElement): (() => void) => {
 	document.body.setAttribute("state", "login");
@@ -51,7 +53,7 @@ export const renderLogin = (container: HTMLElement): (() => void) => {
 			}
 		});
 
-		const svg: Blob = await qr.getRawData("svg");
+		const svg = (await qr.getRawData("svg")) as Blob;
 		const svgHTML = await svg.text();
 		const svgElement = new DOMParser().parseFromString(svgHTML, "image/svg+xml").documentElement;
 
@@ -99,11 +101,99 @@ export const renderLogin = (container: HTMLElement): (() => void) => {
 		refresh();
 	};
 
+	const handleCaptchaRequired = async (event: Event) => {
+		const { sitekey, rqdata, rqtoken, sessionId, ticket } = (event as CustomEvent<any>).detail;
+		console.log("Captcha required, opening native window...");
+
+		let cleanedUp = false;
+		let unlistenSuccess: (() => void) | null = null;
+		let unlistenDestroyed: (() => void) | null = null;
+
+		const cleanup = () => {
+			if (cleanedUp) return;
+			cleanedUp = true;
+			if (unlistenSuccess) unlistenSuccess();
+			if (unlistenDestroyed) unlistenDestroyed();
+		};
+
+		// 1. Listen for the success event
+		const successPromise = listen<{ token: string }>("hcaptcha-success", async (evt) => {
+			cleanup();
+			const encryptedToken = evt.payload.token;
+			console.log("hCaptcha solved and login completed successfully!");
+
+			// Close the captcha window
+			try {
+				const captchaWindow = await WebviewWindow.getByLabel("captcha-window");
+				if (captchaWindow) {
+					await captchaWindow.close();
+				}
+			} catch (err) {
+				console.error("Failed to close captcha window:", err);
+			}
+
+			await discordClient.remoteAuth.completeManualTokenDecrypt(encryptedToken);
+		});
+
+		// 2. Open the captcha window
+		try {
+			await invoke("open_captcha_window", {
+				sitekey,
+				rqdata: rqdata || null,
+				rqtoken: rqtoken || null,
+				sessionId: sessionId || null,
+				ticket,
+				appOrigin: window.location.origin
+			});
+
+			// 3. Listen to window destruction to handle cancellation
+			const captchaWindow = await WebviewWindow.getByLabel("captcha-window");
+			if (captchaWindow) {
+				const destroyedPromise = captchaWindow.once("tauri://destroyed", () => {
+					if (!cleanedUp) {
+						console.warn("Captcha window closed without completion.");
+						cleanup();
+						refresh();
+					}
+				});
+				unlistenDestroyed = await destroyedPromise;
+			}
+		} catch (error) {
+			console.error("Failed to open captcha window:", error);
+			cleanup();
+			refresh();
+		}
+
+		unlistenSuccess = await successPromise;
+	};
+
 	discordClient.remoteAuth.addEventListener("qr", handleQR);
 	discordClient.remoteAuth.addEventListener("user_detected", handleUserDetected);
 	discordClient.remoteAuth.addEventListener("token", handleToken);
 	discordClient.remoteAuth.addEventListener("cancel", handleCancel);
 	discordClient.remoteAuth.addEventListener("error", handleError);
+	discordClient.remoteAuth.addEventListener("captcha_required", handleCaptchaRequired);
+
+	const form = container.querySelector("form");
+	if (form) {
+		form.onsubmit = (event) => {
+			event.preventDefault();
+		};
+	}
+
+	const tokenInput = container.querySelector("#token") as HTMLInputElement;
+	if (tokenInput) {
+		tokenInput.addEventListener("keydown", async (event) => {
+			if (event.key === "Enter") {
+				event.preventDefault();
+				const token = tokenInput.value.trim();
+				if (token) {
+					console.log("Token entered manually, transitioning route...");
+					store.setState({ token });
+				}
+			}
+		});
+	}
 
 	discordClient.remoteAuth.init();
 
@@ -113,6 +203,7 @@ export const renderLogin = (container: HTMLElement): (() => void) => {
 		discordClient.remoteAuth.removeEventListener("token", handleToken);
 		discordClient.remoteAuth.removeEventListener("cancel", handleCancel);
 		discordClient.remoteAuth.removeEventListener("error", handleError);
+		discordClient.remoteAuth.removeEventListener("captcha_required", handleCaptchaRequired);
 		discordClient.remoteAuth.cleanup();
 	};
 };

@@ -37,6 +37,9 @@ class Store {
 		return { ...this.state };
 	}
 
+	private isNotifying = false;
+	private stateChanged = false;
+
 	setState(update: Partial<AppState>) {
 		this.state = { ...this.state, ...update };
 		if (update.token !== undefined) {
@@ -44,6 +47,7 @@ class Store {
 			else localStorage.removeItem("discord_token");
 		}
 
+		this.stateChanged = true;
 		this.notify();
 	}
 
@@ -56,8 +60,26 @@ class Store {
 	}
 
 	private notify() {
-		const state = this.getState();
-		this.listeners.forEach((listener) => listener(state));
+		if (this.isNotifying) {
+			return;
+		}
+
+		this.isNotifying = true;
+		try {
+			while (this.stateChanged) {
+				this.stateChanged = false;
+				const state = this.getState();
+				const listenersCopy = Array.from(this.listeners);
+				for (const listener of listenersCopy) {
+					listener(state);
+					if (this.stateChanged) {
+						break;
+					}
+				}
+			}
+		} finally {
+			this.isNotifying = false;
+		}
 	}
 }
 

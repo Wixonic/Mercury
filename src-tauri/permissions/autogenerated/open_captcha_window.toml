@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-open-captcha-window"
+description = "Enables the open_captcha_window command without any pre-configured scope."
+commands.allow = ["open_captcha_window"]
+
+[[permission]]
+identifier = "deny-open-captcha-window"
+description = "Denies the open_captcha_window command without any pre-configured scope."
+commands.deny = ["open_captcha_window"]

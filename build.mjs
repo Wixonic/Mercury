@@ -1,6 +1,6 @@
 import esbuild from "esbuild";
 import { createServer } from "http";
-import { readFileSync, cpSync, mkdirSync, readdirSync, statSync } from "fs";
+import { readFileSync, cpSync, mkdirSync, readdirSync, statSync, rmSync } from "fs";
 import { join, resolve, extname } from "path";
 import { fileURLToPath } from "url";
 
@@ -12,12 +12,9 @@ const absoluteImportPlugin = {
 	name: "absolute-import-resolver",
 	setup(build) {
 		build.onResolve({ filter: /^\// }, (args) => {
-			if (args.path.startsWith("/assets/")) {
-				return { path: args.path, external: true };
-			}
-			if (args.path.startsWith(srcDir)) {
-				return;
-			}
+			if (args.path.startsWith("/assets/")) return { path: args.path, external: true };
+			if (args.path.startsWith(srcDir)) return;
+
 			let absPath = resolve(srcDir, args.path.slice(1));
 			if (absPath.endsWith(".js")) {
 				const tsPath = absPath.replace(/\.js$/, ".ts");
@@ -45,6 +42,7 @@ const sharedOptions = {
 };
 
 async function build() {
+	rmSync(distDir, { recursive: true, force: true });
 	mkdirSync(distDir, { recursive: true });
 
 	cpSync(resolve(srcDir, "index.html"), resolve(distDir, "index.html"));
@@ -72,6 +70,8 @@ async function build() {
 async function serve() {
 	await build();
 
+	let pendingCaptchaToken = null;
+
 	const mimeTypes = {
 		".html": "text/html; charset=utf-8",
 		".js": "application/javascript; charset=utf-8",
@@ -87,7 +87,62 @@ async function serve() {
 	};
 
 	const server = createServer((req, res) => {
-		let filePath = resolve(distDir, (req.url ?? "/").replace(/^\//, ""));
+		const url = new URL(req.url ?? "/", "http://localhost");
+		const pathname = url.pathname;
+
+		if (pathname === "/captcha-solve") {
+			const sitekey = url.searchParams.get("sitekey") || "";
+			const rqdata = url.searchParams.get("rqdata") || "";
+
+			let html = "";
+			try {
+				html = readFileSync(resolve(srcDir, "components/captcha.html"), "utf-8");
+				html = html.replace("{{SITEKEY}}", sitekey);
+				html = html.replace("{{RQDATA}}", rqdata ? `rqdata: "${rqdata.replace(/"/g, '\\"')}",` : "");
+			} catch (error) {
+				html = "Error loading captcha page template.";
+				console.error("Missing components/captcha.html:", error);
+			}
+
+			res.writeHead(200, {
+				"Content-Type": "text/html; charset=utf-8",
+				"Access-Control-Allow-Origin": "*",
+				"Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+				"Pragma": "no-cache",
+				"Expires": "0"
+			});
+			res.end(html);
+			return;
+		}
+
+		if (pathname === "/captcha-token") {
+			const token = url.searchParams.get("token");
+			const ua = url.searchParams.get("ua");
+			if (token) {
+				pendingCaptchaToken = { token, ua };
+				console.log("✓ Captcha token received with UA:", ua);
+			}
+
+			res.writeHead(200, {
+				"Content-Type": "text/plain",
+				"Access-Control-Allow-Origin": "*"
+			});
+			res.end("ok");
+			return;
+		}
+
+		if (pathname === "/captcha-poll") {
+			const data = pendingCaptchaToken;
+			pendingCaptchaToken = null;
+			res.writeHead(200, {
+				"Content-Type": "application/json",
+				"Access-Control-Allow-Origin": "*"
+			});
+			res.end(JSON.stringify(data || { token: null }));
+			return;
+		}
+
+		let filePath = resolve(distDir, pathname.replace(/^\//, ""));
 
 		try {
 			if (statSync(filePath).isDirectory()) filePath = join(filePath, "index.html");

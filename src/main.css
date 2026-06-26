@@ -1,11 +1,16 @@
+@import url("/styles/divider.css");
 @import url("/styles/font.css");
+@import url("/styles/input.css");
+@import url("/styles/link.css");
 
 @import url("/components/login/login.css");
 @import url("/components/app/app.css");
 
 :root {
 	/* COLORS */
-	--background: 0, 0%, 0%;
+	--background: 225, 0%, 0%;
+	--background-front: 225, 6%, 13%;
+
 	--text: 0, 0%, 100%;
 
 	--blurple: 235, 86%, 65%;
@@ -70,4 +75,8 @@ body {
 
 .hidden {
 	display: none !important;
+}
+
+[data-tauri-drag-region] {
+	user-select: none;
 }

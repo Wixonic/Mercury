@@ -1,0 +1,6 @@
+a {
+	color: hsl(var(--blurple));
+	text-decoration: none;
+
+	cursor: pointer;
+}

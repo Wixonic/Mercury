@@ -23,7 +23,10 @@ export class RestClient extends Client {
 			}
 		});
 
-		if (!response.ok) throw new Error(`HTTP error: ${response.status} ${response.statusText}`);
+		if (!response.ok) {
+			const body = await response.text().catch(() => "(unreadable)");
+			throw new Error(`HTTP error: ${response.status} ${response.statusText} — ${body}`);
+		}
 		else return response;
 	}
 

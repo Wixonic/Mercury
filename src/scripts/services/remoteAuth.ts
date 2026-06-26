@@ -1,12 +1,12 @@
 import WebSocket, { Message as WebSocketMessage } from "@tauri-apps/plugin-websocket";
+import { fetch } from "@tauri-apps/plugin-http";
 
 import type { DiscordClient } from "/scripts/services/discord.ts";
 import {
 	arrayBufferToBase64,
 	base64ToArrayBuffer,
 	base64URLEncode,
-	base64URLDecode,
-	fake
+	base64URLDecode
 } from "/scripts/lib/utils.ts";
 
 export class RemoteAuthClient extends EventTarget {
@@ -14,6 +14,7 @@ export class RemoteAuthClient extends EventTarget {
 	ws: WebSocket | undefined;
 	keyPair: CryptoKeyPair | undefined;
 	heartbeatTimer: any;
+	pendingLoginTicket: string | undefined;
 
 	constructor(client: DiscordClient) {
 		super();
@@ -48,7 +49,7 @@ export class RemoteAuthClient extends EventTarget {
 			this.ws = await WebSocket.connect("wss://remote-auth-gateway.discord.gg/?v=2", {
 				headers: {
 					"Origin": "https://discord.com",
-					"User-Agent": fake.browser_user_agent
+					"User-Agent": navigator.userAgent
 				}
 			});
 			sessionStorage.setItem("discord_remote_ws_id", this.ws.id.toString());
@@ -116,7 +117,7 @@ export class RemoteAuthClient extends EventTarget {
 				break;
 
 			case "pending_remote_init":
-				const qrURL = `https://discord.com/ra/${message.fingerprint}`;
+				const qrURL = `https://discordapp.com/ra/${message.fingerprint}`;
 				this.dispatchEvent(new CustomEvent("qr", { detail: qrURL }));
 				break;
 
@@ -133,12 +134,7 @@ export class RemoteAuthClient extends EventTarget {
 					const [id, discriminator, avatar, username] = decryptedString.split(":");
 
 					this.dispatchEvent(new CustomEvent("user_detected", {
-						detail: {
-							id,
-							discriminator,
-							avatar,
-							username
-						}
+						detail: { id, discriminator, avatar, username }
 					}));
 				} catch (error) {
 					console.error("Failed to decrypt user payload:", error);
@@ -147,39 +143,108 @@ export class RemoteAuthClient extends EventTarget {
 				break;
 
 			case "pending_login":
-				try {
-					const ticketResponse = await this.client.rest.request("/users/@me/remote-auth/login", {
-						headers: {
-							"Origin": "https://discord.com",
-							"User-Agent": fake.browser_user_agent
-						},
-						method: "POST",
-						body: JSON.stringify({
-							ticket: message.ticket
-						})
-					});
-
-					const ticketData = await ticketResponse.json();
-					const encryptedBytes = base64URLDecode(ticketData.encrypted_token);
-					const decryptedBytes = await crypto.subtle.decrypt(
-						{ name: "RSA-OAEP" },
-						this.keyPair!.privateKey,
-						encryptedBytes
-					);
-
-					const token = new TextDecoder().decode(decryptedBytes);
-					this.dispatchEvent(new CustomEvent("token", { detail: token }));
-				} catch (error) {
-					console.error("Failed to complete login:", error);
-					this.dispatchEvent(new CustomEvent("error", { detail: error }));
-				}
-				this.cleanup();
+				await this.performLogin(message.ticket);
 				break;
 
 			case "cancel":
 				this.dispatchEvent(new Event("cancel"));
 				this.cleanup();
 				break;
+		}
+	}
+
+	async performLogin(
+		ticket: string,
+		captchaKey?: string,
+		captchaRqtoken?: string,
+		captchaSessionId?: string,
+		userAgent?: string
+	) {
+		const extraHeaders: Record<string, string> = {};
+		if (captchaKey) extraHeaders["X-Captcha-Key"] = captchaKey;
+		if (captchaRqtoken) extraHeaders["X-Captcha-Rqtoken"] = captchaRqtoken;
+		if (captchaSessionId) extraHeaders["X-Captcha-Session-Id"] = captchaSessionId;
+
+		try {
+			const response = await fetch(`${this.client.rest.baseURL}/users/@me/remote-auth/login`, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+					"Origin": "https://discord.com",
+					"User-Agent": userAgent || navigator.userAgent,
+					...extraHeaders
+				},
+				body: JSON.stringify({ ticket })
+			});
+
+			const data = await response.json();
+
+			if (!response.ok) {
+				if (Array.isArray(data.captcha_key) && data.captcha_key.includes("captcha-required")) {
+					console.log("Captcha required, waiting for user to solve...");
+					this.pendingLoginTicket = ticket;
+					this.dispatchEvent(new CustomEvent("captcha_required", {
+						detail: {
+							sitekey: data.captcha_sitekey,
+							rqdata: data.captcha_rqdata,
+							rqtoken: data.captcha_rqtoken,
+							sessionId: data.captcha_session_id,
+							ticket: ticket
+						}
+					}));
+					return;
+				}
+				throw new Error(`HTTP error: ${response.status} ${response.statusText} — ${JSON.stringify(data)}`);
+			}
+
+			const encryptedBytes = base64URLDecode(data.encrypted_token);
+			const decryptedBytes = await crypto.subtle.decrypt(
+				{ name: "RSA-OAEP" },
+				this.keyPair!.privateKey,
+				encryptedBytes
+			);
+
+			const token = new TextDecoder().decode(decryptedBytes);
+			this.dispatchEvent(new CustomEvent("token", { detail: token }));
+			this.cleanup();
+		} catch (error) {
+			console.error("Failed to complete login:", error);
+			this.dispatchEvent(new CustomEvent("error", { detail: error }));
+			this.cleanup();
+		}
+	}
+
+	async completeCaptchaLogin(
+		captchaKey: string,
+		captchaRqtoken: string,
+		captchaSessionId?: string,
+		userAgent?: string
+	) {
+		if (!this.pendingLoginTicket) {
+			console.error("No pending login ticket for captcha completion");
+			return;
+		}
+		const ticket = this.pendingLoginTicket;
+		this.pendingLoginTicket = undefined;
+		await this.performLogin(ticket, captchaKey, captchaRqtoken, captchaSessionId, userAgent);
+	}
+
+	async completeManualTokenDecrypt(encryptedToken: string) {
+		try {
+			const encryptedBytes = base64URLDecode(encryptedToken);
+			const decryptedBytes = await crypto.subtle.decrypt(
+				{ name: "RSA-OAEP" },
+				this.keyPair!.privateKey,
+				encryptedBytes
+			);
+
+			const token = new TextDecoder().decode(decryptedBytes);
+			this.dispatchEvent(new CustomEvent("token", { detail: token }));
+			this.cleanup();
+		} catch (error) {
+			console.error("Failed to decrypt user token:", error);
+			this.dispatchEvent(new CustomEvent("error", { detail: error }));
+			this.cleanup();
 		}
 	}
 
