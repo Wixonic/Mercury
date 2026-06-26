@@ -46,12 +46,47 @@ export class RemoteAuthClient extends EventTarget {
 			const spki = await crypto.subtle.exportKey("spki", this.keyPair.publicKey);
 			const encodedPublicKey = arrayBufferToBase64(spki);
 
-			this.ws = await WebSocket.connect("wss://remote-auth-gateway.discord.gg/?v=2", {
+			// Workaround for Tauri WebSocket plugin race condition:
+			// The plugin can drop messages if they arrive before addListener is called.
+			const { Channel, invoke } = await import("@tauri-apps/api/core");
+			const listeners = new Set<(arg: WebSocketMessage) => void>();
+			const bufferedMessages: WebSocketMessage[] = [];
+			const onMessage = new Channel<WebSocketMessage>();
+
+			onMessage.onmessage = (message) => {
+				if (listeners.size === 0) {
+					bufferedMessages.push(message);
+				} else {
+					listeners.forEach((l) => l(message));
+				}
+			};
+
+			let config: any = {
 				headers: {
 					"Origin": "https://discord.com",
 					"User-Agent": navigator.userAgent
 				}
+			};
+			config.headers = Array.from(new Headers(config.headers).entries());
+
+			const id = await invoke<number>('plugin:websocket|connect', {
+				url: "wss://remote-auth-gateway.discord.gg/?v=2",
+				onMessage,
+				config
 			});
+
+			this.ws = new WebSocket(id, listeners);
+
+			const originalAddListener = this.ws.addListener.bind(this.ws);
+			this.ws.addListener = (cb: (arg: WebSocketMessage) => void) => {
+				const res = originalAddListener(cb);
+				while (bufferedMessages.length > 0) {
+					const msg = bufferedMessages.shift();
+					if (msg) cb(msg);
+				}
+				return res;
+			};
+
 			sessionStorage.setItem("discord_remote_ws_id", this.ws.id.toString());
 
 			this.ws.addListener(async (rawMessage: WebSocketMessage) => {
