@@ -1,7 +1,5 @@
 import WebSocket, { Message as WebSocketMessage } from "@tauri-apps/plugin-websocket";
 
-import { RemoteAuthClient } from "/scripts/services/remoteAuth.ts";
-
 import { Client, RestClient } from "/scripts/lib/client.ts";
 import { join, fake, wait } from "/scripts/lib/utils.ts";
 
@@ -19,7 +17,6 @@ type GatewayMessage = {
 export class DiscordClient extends Client {
 	rest: RestClient;
 	ws: WebSocket | undefined;
-	remoteAuth: RemoteAuthClient;
 
 	heartbeat: ReturnType<typeof setInterval> | undefined;
 	heartbeatTimestamp: number | undefined;
@@ -33,12 +30,11 @@ export class DiscordClient extends Client {
 	helloWatchdog: ReturnType<typeof setTimeout> | undefined;
 	unlistenGateway: (() => void) | undefined;
 
-	private helloTimeout = 2000;
+	private helloTimeout = 3000;
 
 	constructor(restBaseURL: URL) {
 		super();
 		this.rest = new RestClient(restBaseURL);
-		this.remoteAuth = new RemoteAuthClient(this);
 
 		this.sessionId = sessionStorage.getItem("discord_session_id") || undefined;
 		this.resumeGatewayURL = sessionStorage.getItem("discord_resume_gateway_url") || undefined;
@@ -62,6 +58,7 @@ export class DiscordClient extends Client {
 		this.sessionId = undefined;
 		this.sequence = null;
 		this.resumeGatewayURL = undefined;
+
 		sessionStorage.removeItem("discord_session_id");
 		sessionStorage.removeItem("discord_sequence");
 		sessionStorage.removeItem("discord_resume_gateway_url");
@@ -84,7 +81,6 @@ export class DiscordClient extends Client {
 		}
 
 		try {
-			// Validate token using REST request to /users/@me
 			try {
 				const userResponse = await this.rest.request("/users/@me");
 				const userData = await userResponse.json();
@@ -109,7 +105,7 @@ export class DiscordClient extends Client {
 				this.ws = await WebSocket.connect(join(gatewayURL!, "?v=9&encoding=json"), {
 					headers: {
 						"Origin": "https://discord.com",
-						"User-Agent": navigator.userAgent
+						"User-Agent": fake.browser_user_agent
 					}
 				});
 				this.unlistenGateway = this.ws.addListener(this.gateway.bind(this));
@@ -134,7 +130,7 @@ export class DiscordClient extends Client {
 			this.ws = await WebSocket.connect(join(gatewayURL, "?v=9&encoding=json"), {
 				headers: {
 					"Origin": "https://discord.com",
-					"User-Agent": navigator.userAgent
+					"User-Agent": fake.browser_user_agent
 				}
 			});
 			this.unlistenGateway = this.ws.addListener(this.gateway.bind(this));
@@ -248,6 +244,11 @@ export class DiscordClient extends Client {
 						this.dispatchEvent(new CustomEvent("presenceUpdate", {
 							detail: currentSession?.status ?? null
 						}));
+						break;
+
+					case "RESUMED":
+						console.info("Resumed");
+						this.dispatchEvent(new CustomEvent("resumed"));
 						break;
 
 					default:

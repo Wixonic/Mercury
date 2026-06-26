@@ -3,24 +3,22 @@
 	"identifier": "default",
 	"description": "Capability for the main window",
 	"windows": [
-		"main",
-		"captcha-window"
+		"main"
 	],
 	"permissions": [
 		"core:default",
 		"core:window:allow-start-dragging",
-		"core:window:allow-create",
-		"core:window:allow-close",
-		"core:webview:allow-create-webview-window",
-		"allow-open-captcha-window",
-		"core:event:allow-listen",
 		"opener:default",
 		"websocket:default",
 		{
 			"identifier": "http:default",
 			"allow": [
-				{ "url": "https://**" },
-				{ "url": "http://**" }
+				{
+					"url": "https://**"
+				},
+				{
+					"url": "http://**"
+				}
 			]
 		}
 	]
