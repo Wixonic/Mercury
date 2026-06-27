@@ -10,7 +10,7 @@ export interface Session {
 		version: number;
 	};
 	active: boolean;
-}
+};
 
 export interface AppState {
 	route: "login" | "app";
@@ -18,7 +18,7 @@ export interface AppState {
 	currentUser: any | null;
 	sessions: Session[];
 	currentPresence: PresenceStatus | null;
-}
+};
 
 type StateListener = (state: AppState) => void;
 
@@ -35,7 +35,7 @@ class Store {
 
 	getState(): AppState {
 		return { ...this.state };
-	}
+	};
 
 	private isNotifying = false;
 	private stateChanged = false;
@@ -49,38 +49,34 @@ class Store {
 
 		this.stateChanged = true;
 		this.notify();
-	}
+	};
 
 	subscribe(listener: StateListener): () => void {
 		this.listeners.add(listener);
 		listener(this.getState());
-		return () => {
-			this.listeners.delete(listener);
-		};
-	}
+		return () => this.listeners.delete(listener);
+	};
 
 	private notify() {
-		if (this.isNotifying) {
-			return;
-		}
+		if (this.isNotifying) return;
 
 		this.isNotifying = true;
+
 		try {
 			while (this.stateChanged) {
 				this.stateChanged = false;
+
 				const state = this.getState();
 				const listenersCopy = Array.from(this.listeners);
 				for (const listener of listenersCopy) {
 					listener(state);
-					if (this.stateChanged) {
-						break;
-					}
+					if (this.stateChanged) break;
 				}
 			}
 		} finally {
 			this.isNotifying = false;
 		}
-	}
-}
+	};
+};
 
 export const store = new Store();

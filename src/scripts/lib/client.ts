@@ -12,7 +12,7 @@ export class RestClient extends Client {
 		super();
 
 		this.baseURL = baseURL;
-	}
+	};
 
 	async request(path: string, options?: (RequestInit & ClientOptions)): Promise<Response> {
 		const response = await fetch(`${this.baseURL.toString()}${path}`, {
@@ -20,17 +20,16 @@ export class RestClient extends Client {
 			headers: {
 				...this.headers,
 				...options?.headers
-			},
+			}
 		});
 
 		if (!response.ok) {
 			const body = await response.text().catch(() => "(unreadable)");
 			throw new Error(`HTTP error: ${response.status} ${response.statusText} — ${body}`);
-		}
-		else return response;
-	}
+		} else return response;
+	};
 
 	init(token: string): void {
 		this.headers["Authorization"] = token;
-	}
+	};
 };

@@ -1,4 +1,4 @@
-import { store } from "/scripts/store/store.ts";
+import { store } from "/scripts/lib/store.ts";
 
 import html from "./login.html";
 

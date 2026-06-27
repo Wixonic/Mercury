@@ -1,5 +1,6 @@
-import { DiscordClient } from "/scripts/services/discord.ts";
-import { store } from "/scripts/store/store.ts";
+import { store } from "/scripts/lib/store.ts";
+
+import { DiscordClient } from "/scripts/services/discord/client.ts";
 
 import { renderApp } from "/components/app/app.ts";
 import { renderLogin } from "/components/login/login.ts";

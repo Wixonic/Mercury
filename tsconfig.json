@@ -11,10 +11,10 @@
 		"skipLibCheck": true,
 		"paths": {
 			"/*": [
-				"./*"
+				"./src/*"
 			],
 			"/scripts/*": [
-				"./scripts/*"
+				"./src/scripts/*"
 			]
 		},
 		"moduleResolution": "bundler",
@@ -29,6 +29,6 @@
 		"noFallthroughCasesInSwitch": true
 	},
 	"include": [
-		"."
+		"src/**/*"
 	]
 }

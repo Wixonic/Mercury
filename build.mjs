@@ -5,27 +5,28 @@ import { join, resolve, extname } from "path";
 import { fileURLToPath } from "url";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
-const srcDir = resolve(__dirname, "src");
-const distDir = resolve(__dirname, "dist");
+const source = resolve(__dirname, "src");
+const distribution = resolve(__dirname, "dist");
 
 const absoluteImportPlugin = {
 	name: "absolute-import-resolver",
 	setup(build) {
 		build.onResolve({ filter: /^\// }, (args) => {
 			if (args.path.startsWith("/assets/")) return { path: args.path, external: true };
-			if (args.path.startsWith(srcDir)) return;
+			if (args.path.startsWith(source)) return;
 
-			let absPath = resolve(srcDir, args.path.slice(1));
-			if (absPath.endsWith(".js")) {
-				const tsPath = absPath.replace(/\.js$/, ".ts");
+			let absolutePath = resolve(source, args.path.slice(1));
+			if (absolutePath.endsWith(".js")) {
+				const tsPath = absolutePath.replace(/\.js$/, ".ts");
 				try {
 					statSync(tsPath);
-					absPath = tsPath;
+					absolutePath = tsPath;
 				} catch { }
 			}
-			return { path: absPath };
+
+			return { path: absolutePath };
 		});
-	},
+	}
 };
 
 const sharedOptions = {
@@ -41,33 +42,33 @@ const sharedOptions = {
 	},
 };
 
-async function build() {
-	rmSync(distDir, { recursive: true, force: true });
-	mkdirSync(distDir, { recursive: true });
+const build = async () => {
+	rmSync(distribution, { recursive: true, force: true });
+	mkdirSync(distribution, { recursive: true });
 
-	cpSync(resolve(srcDir, "index.html"), resolve(distDir, "index.html"));
+	cpSync(resolve(source, "index.html"), resolve(distribution, "index.html"));
 
 	for (const folder of ["styles", "assets"]) {
-		const src = resolve(srcDir, folder);
+		const src = resolve(source, folder);
 		try {
 			statSync(src);
-			cpSync(src, resolve(distDir, folder), { recursive: true });
+			cpSync(src, resolve(distribution, folder), { recursive: true });
 		} catch { }
 	}
 
 	await esbuild.build({
 		...sharedOptions,
 		entryPoints: [
-			{ in: resolve(srcDir, "main.ts"), out: "main" },
-			{ in: resolve(srcDir, "main.css"), out: "main" }
+			{ in: resolve(source, "main.ts"), out: "main" },
+			{ in: resolve(source, "main.css"), out: "main" }
 		],
-		outdir: distDir,
+		outdir: distribution,
 	});
 
-	console.log("✓ Build complete →", distDir);
+	console.log("✓ Build complete →", distribution);
 }
 
-async function serve() {
+const serve = async () => {
 	await build();
 
 	let pendingCaptchaToken = null;
@@ -89,7 +90,10 @@ async function serve() {
 	const server = createServer((req, res) => {
 		const url = new URL(req.url ?? "/", "http://localhost");
 		const pathname = url.pathname;
-		let filePath = resolve(distDir, pathname.replace(/^\//, ""));
+		const relativePath = pathname.replace(/^\//, "");
+		let filePath = resolve(distribution, relativePath);
+
+		if (relativePath.startsWith("assets/") || relativePath.startsWith("styles/")) filePath = resolve(source, relativePath);
 
 		try {
 			if (statSync(filePath).isDirectory()) filePath = join(filePath, "index.html");
@@ -110,7 +114,7 @@ async function serve() {
 	server.listen(port, "127.0.0.1", () => {
 		console.log(`✓ Dev server running → http://localhost:${port}`);
 	});
-}
+};
 
 const mode = process.argv[2];
 if (mode === "--serve") serve();

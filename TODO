@@ -1,0 +1,4 @@
+- [ ] REST /users/@me/referrals/eligibility: Nitro referrals
+- [ ] https://status.discord.com/api/v2/scheduled-maintenances/upcoming.json
+- [ ] REST /users/@me/entitlements
+- [ ] REST /promotions

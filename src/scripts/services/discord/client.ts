@@ -1,11 +1,12 @@
 import WebSocket, { Message as WebSocketMessage } from "@tauri-apps/plugin-websocket";
 
 import { Client, RestClient } from "/scripts/lib/client.ts";
+import { store, type Session } from "/scripts/lib/store.ts";
 import { join, fake, wait } from "/scripts/lib/utils.ts";
 
-
-import { store } from "/scripts/store/store.ts";
-import type { Session } from "/scripts/store/store.ts";
+import { GuildCollection } from "/scripts/services/discord/guild.ts";
+import { Snowflake } from "/scripts/services/discord/snowflake.ts";
+import { UserCollection, UserCustomStatus, UserStatusType } from "/scripts/services/discord/user.ts";
 
 type GatewayMessage = {
 	code: number;
@@ -20,36 +21,57 @@ type GuildFolder = {
 	guild_ids: string[];
 };
 
-type DiscordSettings = {
-	activity_joining_restricted_guild_ids: string[];
-	activity_restricted_guild_ids: string[];
+export enum ClientSettingsStickerAnimationOption {
+	AlwaysAnimate = 0,
+	AnimateOnInteraction = 1,
+	NeverAnimate = 2
+};
+
+export enum ClientSettingsExplicitContentFilter {
+	Disabled = 0,
+	NonFriends = 1,
+	AllMessages = 2
+};
+
+const ClientSettingsFriendDiscoveryFlags = {
+	FindByPhone: 1n << 1n,
+	FindByEmail: 1n << 2n,
+} as const;
+export type ClientSettingsFriendDiscoveryFlags = typeof ClientSettingsFriendDiscoveryFlags[keyof typeof ClientSettingsFriendDiscoveryFlags];
+
+export interface ClientSettingsFriendSourceFlags {
+	all?: boolean;
+	mutual_friends?: boolean;
+	mutual_guilds?: boolean;
+};
+
+export enum ClientSettingsSlayerSdkReceiveInGameDms {
+	Unset = 0,
+	All = 1,
+	UsersWithGame = 2,
+	None = 3
+};
+
+export interface ClientSettings {
+	activity_restricted_guild_ids: Snowflake[];
+	activity_joining_restricted_guild_ids: Snowflake[];
 	afk_timeout: number;
-	allow_accessiblity_detection: boolean;
+	allow_accessibility_detection: boolean;
 	allow_activity_party_privacy_friends: boolean;
 	allow_activity_party_privacy_voice_channel: boolean;
 	animate_emoji: boolean;
-	animate_stickers: 0 | 1 | 2;
-	application_settings: {};
+	animate_stickers: ClientSettingsStickerAnimationOption;
 	contact_sync_enabled: boolean;
 	convert_emoticons: boolean;
-	custom_status: {
-		text: string | null;
-		expires_at: string | null;
-		emoji_name: string | null;
-		emoji_id: string | null;
-	};
+	custom_status: UserCustomStatus | null;
 	default_guilds_restricted: boolean;
 	detect_platform_accounts: boolean;
 	developer_mode: boolean;
 	disable_games_tab: boolean;
 	enable_tts_command: boolean;
-	explicit_content_filter: 0 | 1 | 2;
-	friend_discovery_flags: 0 | 1 | 2;
-	friend_source_flags: {
-		all: boolean;
-		mutual_friends: boolean;
-		mutual_guilds: boolean;
-	};
+	explicit_content_filter: ClientSettingsExplicitContentFilter;
+	friend_discovery_flags: ClientSettingsFriendDiscoveryFlags;
+	friend_source_flags: ClientSettingsFriendSourceFlags | null;
 	gif_auto_play: boolean;
 	guild_folders: GuildFolder[];
 	inline_attachment_media: boolean;
@@ -57,22 +79,26 @@ type DiscordSettings = {
 	locale: string;
 	message_display_compact: boolean;
 	native_phone_integration_enabled: boolean;
-	passwordless: boolean;
-	profile_visibility: 3;
 	render_embeds: boolean;
 	render_reactions: boolean;
-	restricted_guilds: string[];
+	restricted_guilds: Snowflake[];
 	show_current_game: boolean;
-	status: "online" | "idle" | "dnd" | "invisible";
+	slayer_sdk_receive_dms_in_game: ClientSettingsSlayerSdkReceiveInGameDms;
+	soundboard_volume: number;
+	status: UserStatusType;
 	stream_notifications_enabled: boolean;
-	theme: "light" | "dark";
+	theme: "dark" | "light" | "darker" | "midnight";
 	timezone_offset: number;
+	view_nsfw_commands: boolean;
 	view_nsfw_guilds: boolean;
 };
 
 export class DiscordClient extends Client {
 	rest: RestClient;
 	ws: WebSocket | undefined;
+
+	guilds = new GuildCollection();
+	users = new UserCollection();
 
 	private heartbeat: ReturnType<typeof setInterval> | undefined;
 	private heartbeatTimestamp: number | undefined;
@@ -85,8 +111,9 @@ export class DiscordClient extends Client {
 	isUnloading = false;
 	private helloWatchdog: ReturnType<typeof setTimeout> | undefined;
 	private unlistenGateway: (() => void) | undefined;
+	private connectionGeneration = 0;
 
-	settings: DiscordSettings | undefined;
+	settings: ClientSettings | undefined;
 
 	private helloTimeout = 3000;
 
@@ -98,7 +125,7 @@ export class DiscordClient extends Client {
 		this.resumeGatewayURL = sessionStorage.getItem("discord_resume_gateway_url") || undefined;
 		const sequence = sessionStorage.getItem("discord_sequence");
 		this.sequence = sequence ? parseInt(sequence, 10) : null;
-	}
+	};
 
 	async init(token?: string) {
 		this.dispatchEvent(new CustomEvent("connecting"));
@@ -108,13 +135,19 @@ export class DiscordClient extends Client {
 			this.rest.init(token);
 		}
 
+		await this.disconnect(false);
+		const generation = ++this.connectionGeneration;
+
 		try {
 			try {
 				const userResponse = await this.rest.request("/users/@me");
+				if (generation !== this.connectionGeneration) return;
 				const userData = await userResponse.json();
+				if (generation !== this.connectionGeneration) return;
 				store.setState({ currentUser: userData });
 			} catch (error: any) {
 				console.error("Token verification failed:", error);
+				if (generation !== this.connectionGeneration) return;
 				if (error.message && (error.message.includes("401") || error.message.includes("403"))) {
 					this.resetAndRedirectToLogin();
 					return;
@@ -124,18 +157,25 @@ export class DiscordClient extends Client {
 			let gatewayURL = this.resumeGatewayURL;
 			if (!gatewayURL) {
 				const gatewayResponse = await this.rest.request("/gateway");
+				if (generation !== this.connectionGeneration) return;
 				const gatewayData = await gatewayResponse.json();
+				if (generation !== this.connectionGeneration) return;
 				console.log("Gateway response data:", gatewayData);
 				gatewayURL = gatewayData.url;
 			} else console.log("Using cached resume gateway URL:", gatewayURL);
 
 			try {
-				this.ws = await WebSocket.connect(join(gatewayURL!, "?v=9&encoding=json"), {
+				const ws = await WebSocket.connect(join(gatewayURL!, "?v=9&encoding=json"), {
 					headers: {
 						"Origin": "https://discord.com",
 						"User-Agent": fake.browser_user_agent
 					}
 				});
+				if (generation !== this.connectionGeneration) {
+					ws.disconnect().catch(console.error);
+					return;
+				}
+				this.ws = ws;
 				this.unlistenGateway = this.ws.addListener(this.gateway.bind(this));
 				this.startHelloWatchdog();
 			} catch (error) {
@@ -143,9 +183,10 @@ export class DiscordClient extends Client {
 			}
 		} catch (error: any) {
 			console.error("Failed to get Discord Gateway URL:", error);
+			if (generation !== this.connectionGeneration) return;
 			if (error.message && (error.message.includes("401") || error.message.includes("403"))) this.resetAndRedirectToLogin();
 		}
-	}
+	};
 
 	private resetAndRedirectToLogin() {
 		this.token = undefined;
@@ -164,24 +205,34 @@ export class DiscordClient extends Client {
 		});
 
 		this.disconnect(false);
-	}
+	};
 
 	private async reconnect() {
 		this.dispatchEvent(new CustomEvent("connecting"));
 		if (this.isUnloading) return;
+
+		const generation = ++this.connectionGeneration;
+
 		try {
 			const gatewayURL = this.resumeGatewayURL ?? (await (await this.rest.request("/gateway")).json()).url;
+			if (generation !== this.connectionGeneration) return;
 
-			this.ws = await WebSocket.connect(join(gatewayURL, "?v=9&encoding=json"), {
+			const ws = await WebSocket.connect(join(gatewayURL, "?v=9&encoding=json"), {
 				headers: {
 					"Origin": "https://discord.com",
 					"User-Agent": fake.browser_user_agent
 				}
 			});
+			if (generation !== this.connectionGeneration) {
+				ws.disconnect().catch(console.error);
+				return;
+			}
+			this.ws = ws;
 			this.unlistenGateway = this.ws.addListener(this.gateway.bind(this));
 			this.startHelloWatchdog();
 		} catch (error: any) {
 			console.error("Failed to reconnect:", error);
+			if (generation !== this.connectionGeneration) return;
 			if (error.message && (error.message.includes("401") || error.message.includes("403"))) {
 				this.resetAndRedirectToLogin();
 				return;
@@ -189,9 +240,11 @@ export class DiscordClient extends Client {
 			this.dispatchEvent(new CustomEvent("disconnected", { detail: error }));
 			if (!this.isUnloading) this.reconnect();
 		}
-	}
+	};
 
 	async disconnect(reconnect = true) {
+		this.connectionGeneration++;
+
 		this.dispatchEvent(new CustomEvent("disconnected"));
 
 		if (this.heartbeat) clearInterval(this.heartbeat);
@@ -218,7 +271,7 @@ export class DiscordClient extends Client {
 		}
 
 		if (reconnect) this.reconnect();
-	}
+	};
 
 	private startHelloWatchdog() {
 		if (this.helloWatchdog) clearTimeout(this.helloWatchdog);
@@ -229,7 +282,7 @@ export class DiscordClient extends Client {
 			sessionStorage.removeItem("discord_resume_gateway_url");
 			this.disconnect(true);
 		}, this.helloTimeout);
-	}
+	};
 
 	private parseGatewayMessage(rawMessage: WebSocketMessage): GatewayMessage | null {
 		try {
@@ -247,7 +300,7 @@ export class DiscordClient extends Client {
 			console.error("Failed to parse gateway message:", error);
 			return null;
 		}
-	}
+	};
 
 	async gateway(rawMessage: WebSocketMessage) {
 		if (rawMessage.type === "Close") {
@@ -258,7 +311,7 @@ export class DiscordClient extends Client {
 				this.resetAndRedirectToLogin();
 				return;
 			}
-			this.reconnect();
+			this.disconnect(true);
 			return;
 		}
 
@@ -354,20 +407,22 @@ export class DiscordClient extends Client {
 				console.warn("Unhandled gateway message code:", message.code, "with data:", message.data);
 				break;
 		}
-	}
+	};
 
-	async fetchSettings() {
+	async fetchSettings(): Promise<ClientSettings> {
 		const response = await this.rest.request("/users/@me/settings");
 		this.settings = await response.json();
-	}
+		return this.settings!;
+	};
 
-	async patchSettings(settings: Partial<DiscordSettings>) {
+	async patchSettings(settings: Partial<ClientSettings>): Promise<ClientSettings> {
 		const response = await this.rest.request("/users/@me/settings", {
 			method: "PATCH",
 			body: JSON.stringify(settings)
 		});
 		this.settings = await response.json();
-	}
+		return this.settings!;
+	};
 
 	async send(data: any) {
 		if (!this.ws) {
@@ -381,7 +436,7 @@ export class DiscordClient extends Client {
 			console.error("Failed to send data over WebSocket:", error);
 			return null;
 		}
-	}
+	};
 
 	private async sendHeartbeat() {
 		if (this.heartbeatTimestamp) {
@@ -395,7 +450,7 @@ export class DiscordClient extends Client {
 			op: 1, // Heartbeat
 			d: this.sequence
 		});
-	}
+	};
 
 	private async sendIdentify() {
 		const lastIdentify = sessionStorage.getItem("discord_last_identify");
@@ -423,7 +478,7 @@ export class DiscordClient extends Client {
 				intents: 513
 			}
 		});
-	}
+	};
 
 	private async sendResume() {
 		this.dispatchEvent(new CustomEvent("disconnected"));
@@ -435,5 +490,5 @@ export class DiscordClient extends Client {
 				seq: this.sequence
 			}
 		});
-	}
+	};
 };
