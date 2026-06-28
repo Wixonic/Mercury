@@ -1,7 +1,9 @@
+@import url("/styles/button.css");
 @import url("/styles/divider.css");
 @import url("/styles/font.css");
 @import url("/styles/input.css");
 @import url("/styles/link.css");
+@import url("/styles/tooltip.css");
 
 @import url("/components/login/login.css");
 @import url("/components/app/app.css");
@@ -49,6 +51,7 @@
 	-webkit-tap-highlight-color: transparent;
 }
 
+html,
 body {
 	display: flex;
 	flex-direction: column;
@@ -70,11 +73,29 @@ body {
 	margin: 0;
 	padding: 0;
 
-	overflow: auto;
+	overflow: hidden;
+	overscroll-behavior: none;
 }
 
 .hidden {
 	display: none !important;
+}
+
+.loadable * {
+	--loadable-transition: opacity 0.3s ease-in-out, filter 0.1s ease-in-out;
+	transition: var(--loadable-transition);
+}
+
+.loadable.loading {
+	cursor: default;
+
+	pointer-events: none;
+}
+
+.loadable.loading * {
+	opacity: 0.3;
+
+	filter: blur(1rem);
 }
 
 [data-tauri-drag-region] {

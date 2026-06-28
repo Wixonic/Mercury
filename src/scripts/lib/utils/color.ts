@@ -37,4 +37,8 @@ export class Color {
 	get hex(): string {
 		return `#${this.value.toString(16).padStart(6, "0")}`;
 	};
+
+	toJSON(): number {
+		return this.value;
+	};
 };

@@ -1,4 +1,5 @@
 import { store } from "/scripts/lib/store.ts";
+import "/scripts/lib/tooltip.ts";
 
 import { DiscordClient } from "/scripts/services/discord/client.ts";
 

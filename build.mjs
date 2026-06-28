@@ -1,7 +1,7 @@
 import esbuild from "esbuild";
 import { createServer } from "http";
 import { readFileSync, cpSync, mkdirSync, readdirSync, statSync, rmSync } from "fs";
-import { join, resolve, extname } from "path";
+import { join, resolve, extname, relative, dirname } from "path";
 import { fileURLToPath } from "url";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
@@ -56,12 +56,47 @@ const build = async () => {
 		} catch { }
 	}
 
+	const getFiles = (dir) => {
+		const files = [];
+		try {
+			const list = readdirSync(dir);
+			for (const file of list) {
+				const filePath = join(dir, file);
+				const stat = statSync(filePath);
+				if (stat.isDirectory()) {
+					files.push(...getFiles(filePath));
+				} else {
+					files.push(filePath);
+				}
+			}
+		} catch { }
+		return files;
+	};
+
+	const entryPoints = [
+		{ in: resolve(source, "main.ts"), out: "main" },
+		{ in: resolve(source, "main.css"), out: "main" }
+	];
+
+	const viewsDir = resolve(source, "components/app/views");
+	const viewFiles = getFiles(viewsDir);
+
+	for (const file of viewFiles) {
+		const relativePath = relative(source, file);
+		const ext = extname(file);
+		if (ext === ".ts" || ext === ".css") {
+			const outPath = relativePath.slice(0, -ext.length);
+			entryPoints.push({ in: file, out: outPath });
+		} else if (ext === ".html") {
+			const destPath = resolve(distribution, relativePath);
+			mkdirSync(dirname(destPath), { recursive: true });
+			cpSync(file, destPath);
+		}
+	}
+
 	await esbuild.build({
 		...sharedOptions,
-		entryPoints: [
-			{ in: resolve(source, "main.ts"), out: "main" },
-			{ in: resolve(source, "main.css"), out: "main" }
-		],
+		entryPoints,
 		outdir: distribution,
 	});
 

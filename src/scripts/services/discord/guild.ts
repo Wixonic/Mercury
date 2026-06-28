@@ -201,78 +201,86 @@ export interface GuildIdentity {
 	badge: CDNElement;
 };
 
-
-
 export class Guild<Ready extends boolean = true> {
 	id!: Snowflake;
 	name!: string;
-	icon!: CDNElement | null;
-	home_header!: CDNElement | null;
-	splash!: CDNElement | null;
-	discovery_splash!: CDNElement | null;
-	description!: string | null;
+	icon?: CDNElement;
+	home_header?: CDNElement;
+	splash?: CDNElement;
+	discovery_splash?: CDNElement;
+	description?: string;
 	features!: GuildFeature[];
 	emojis!: EmojiCollection;
 	stickers!: StickerCollection;
-	approximate_member_count!: number | null;
-	approximate_presence_count!: number | null;
+	approximate_member_count?: number;
+	approximate_presence_count?: number;
 
-	banner!: Loaded<CDNElement | null, Ready>;
+	banner?: Loaded<CDNElement, Ready>;
 	owner_id!: Loaded<Snowflake, Ready>;
-	afk_channel_id!: Loaded<Snowflake | null, Ready>;
+	afk_channel_id?: Loaded<Snowflake, Ready>;
 	afk_timeout!: Loaded<number, Ready>;
-	widget_enabled!: Loaded<boolean | null, Ready>;
-	widget_channel_id!: Loaded<Snowflake | null, Ready>;
+	widget_enabled?: Loaded<boolean, Ready>;
+	widget_channel_id?: Loaded<Snowflake, Ready>;
 	verification_level!: Loaded<GuildVerificationLevel, Ready>;
 	default_message_notifications!: Loaded<GuildMessageNotificationLevel, Ready>;
 	explicit_content_filter!: Loaded<GuildExplicitContentFilterLevel, Ready>;
 	roles!: Loaded<RoleCollection, Ready>;
 	mfa_level!: Loaded<GuildMfaLevel, Ready>;
-	system_channel_id!: Loaded<Snowflake | null, Ready>;
+	system_channel_id?: Loaded<Snowflake, Ready>;
 	system_channel_flags!: Loaded<GuildSystemChannelFlags, Ready>;
-	rules_channel_id!: Loaded<Snowflake | null, Ready>;
-	public_updates_channel_id!: Loaded<Snowflake | null, Ready>;
-	safety_alerts_channel_id!: Loaded<Snowflake | null, Ready>;
-	max_presences!: Loaded<number | null, Ready>;
-	max_members!: Loaded<number | null, Ready>;
-	vanity_url_code!: Loaded<string | null, Ready>;
+	rules_channel_id?: Loaded<Snowflake, Ready>;
+	public_updates_channel_id?: Loaded<Snowflake, Ready>;
+	safety_alerts_channel_id?: Loaded<Snowflake, Ready>;
+	max_presences?: Loaded<number, Ready>;
+	max_members?: Loaded<number, Ready>;
+	vanity_url_code?: Loaded<string, Ready>;
 	premium_tier!: Loaded<GuildPremiumTier, Ready>;
 	premium_subscription_count!: Loaded<number, Ready>;
 	preferred_locale!: Loaded<string, Ready>;
-	max_video_channel_users!: Loaded<number | null, Ready>;
-	max_stage_video_channel_users!: Loaded<number | null, Ready>;
+	max_video_channel_users?: Loaded<number, Ready>;
+	max_stage_video_channel_users?: Loaded<number, Ready>;
 	nsfw_level!: Loaded<GuildNsfwLevel, Ready>;
-	owner_configured_content_level!: Loaded<GuildNsfwLevel | null, Ready>;
-	hub_type!: Loaded<GuildHubType | null, Ready>;
+	owner_configured_content_level?: Loaded<GuildNsfwLevel, Ready>;
+	hub_type?: Loaded<GuildHubType, Ready>;
 	premium_progress_bar_enabled!: Loaded<boolean, Ready>;
-	premium_progress_bar_enabled_user_updated_at!: Loaded<Date | null, Ready>;
-	latest_onboarding_question_id!: Loaded<Snowflake | null, Ready>;
-	incidents_data!: Loaded<GuildAutomodIncidentsData | null, Ready>;
-	premium_features!: Loaded<GuildPremiumFeatures | null, Ready>;
-	profile!: Loaded<GuildIdentity | null, Ready>;
-	official_message_color!: Loaded<Color | null, Ready>;
-	version!: Loaded<string | null, Ready>;
+	premium_progress_bar_enabled_user_updated_at?: Loaded<Date, Ready>;
+	latest_onboarding_question_id?: Loaded<Snowflake, Ready>;
+	incidents_data?: Loaded<GuildAutomodIncidentsData, Ready>;
+	premium_features?: Loaded<GuildPremiumFeatures, Ready>;
+	profile?: Loaded<GuildIdentity, Ready>;
+	official_message_color?: Loaded<Color, Ready>;
+	version?: Loaded<string, Ready>;
 
 	constructor(data: any) {
 		Object.assign(this, data);
 
-		this.icon = data.icon ? new CDNElement(`/icons/${data.id}`, data.icon) : null;
-		this.home_header = data.home_header ? new CDNElement(`/home-headers/${data.id}`, data.home_header) : null;
-		this.splash = data.splash ? new CDNElement(`/splashes/${data.id}`, data.splash) : null;
-		this.discovery_splash = data.discovery_splash ? new CDNElement(`/discovery-splashes/${data.id}`, data.discovery_splash) : null;
+		if (data.icon) this.icon = new CDNElement(`/icons/${data.id}`, data.icon);
+		if (data.home_header) this.home_header = new CDNElement(`/home-headers/${data.id}`, data.home_header);
+		if (data.splash) this.splash = new CDNElement(`/splashes/${data.id}`, data.splash);
+		if (data.discovery_splash) this.discovery_splash = new CDNElement(`/discovery-splashes/${data.id}`, data.discovery_splash);
 		this.features = data.features ?? [];
 		this.emojis = new EmojiCollection(data.emojis ?? {});
 		this.stickers = new StickerCollection(data.stickers ?? {});
 
-		if (data.owner_id !== undefined) {
-			this.banner = data.banner ? new CDNElement(`/banners/${data.id}`, data.banner) : null;
-			this.roles = new RoleCollection(data.roles);
-		}
+		if (data.banner) this.banner = new CDNElement(`/banners/${data.id}`, data.banner);
+		if (data.roles) this.roles = new RoleCollection(data.roles);
+		if (data.premium_progress_bar_enabled_user_updated_at) this.premium_progress_bar_enabled_user_updated_at = new Date(data.premium_progress_bar_enabled_user_updated_at);
+		if (data.incidents_data) this.incidents_data = {
+			raid_detected_at: data.incidents_data.raid_detected_at ? new Date(data.incidents_data.raid_detected_at) : null,
+			dm_spam_detected_at: data.incidents_data.dm_spam_detected_at ? new Date(data.incidents_data.dm_spam_detected_at) : null,
+			invites_disabled_until: data.incidents_data.invites_disabled_until ? new Date(data.incidents_data.invites_disabled_until) : null,
+			dms_disabled_until: data.incidents_data.dms_disabled_until ? new Date(data.incidents_data.dms_disabled_until) : null
+		};
+		if (data.profile) this.profile = {
+			tag: data.profile.tag,
+			badge: new CDNElement(`/guild-tag-badges/${data.id}`, data.profile.badge)
+		};
+		if (data.official_message_color !== undefined && data.official_message_color !== null) this.official_message_color = new Color(data.official_message_color);
 	};
 };
 
 export class GuildCollection extends Collection<Guild | Guild<false>> {
-	async fetch<Partial extends boolean = false>(id: string, partial: Partial = false as Partial): Promise<Guild<Partial extends true ? false : true>> {
+	async fetch<Partial extends boolean = false>(id: Snowflake, partial: Partial = false as Partial): Promise<Guild<Partial extends true ? false : true>> {
 		const response = await discordClient.rest.request(`/guilds/${id}${partial ? "/basic" : ""}`);
 		return new Guild<Partial extends true ? false : true>(await response.json());
 	};

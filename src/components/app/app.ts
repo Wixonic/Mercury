@@ -4,7 +4,10 @@ import { getIcon } from "/scripts/lib/icon.ts";
 
 import { Guild } from "/scripts/services/discord/guild.ts";
 
+import { view } from "/components/app/lib/view.ts";
+
 import { discordClient } from "/main.ts";
+import { Snowflake } from "/scripts/services/discord/snowflake";
 
 let currentState: string | undefined;
 const changeState = (state?: string, color: string = "text", force: boolean = false) => {
@@ -16,79 +19,148 @@ const changeState = (state?: string, color: string = "text", force: boolean = fa
 	currentState = state;
 };
 
-const ready = async () => {
-	changeState("Fetching settings", "warning");
+let currentLoadToken: object | null = null;
 
-	await discordClient.fetchSettings();
+const ready = async () => {
+	const loadToken = {};
+	currentLoadToken = loadToken;
+
+	changeState("Displaying homepage", "warning");
+
+	await view("/views/homepage/homepage.html");
+	if (currentLoadToken !== loadToken) return;
+
+	changeState("Fetching data", "warning");
+
+	const [settings, self] = await Promise.all([
+		discordClient.fetchSettings(),
+		discordClient.self()
+	]);
+	if (currentLoadToken !== loadToken) return;
+	console.log(settings, self);
+
+	const youBar = document.querySelector("nav.you-bar");
+	if (youBar) {
+		youBar.classList.add("loading");
+
+		const avatarContainer = youBar.querySelector("div.avatar")!;
+		{
+			const avatarImage = avatarContainer.querySelector("img.avatar-image") as HTMLImageElement;
+			avatarImage.src = self!.avatar.getURL(undefined, 256, "high", undefined, undefined, true);
+
+			if (self!.avatar_decoration_data) {
+				const avatarDecoration = avatarContainer.querySelector("img.avatar-decoration") as HTMLImageElement;
+				avatarDecoration.src = self!.avatar_decoration_data.asset.getURL(undefined, 256, "high", undefined, undefined, true);
+			}
+
+			// const statusIndicator = avatarContainer.querySelector("div.status-indicator");
+			// statusIndicator.classList.add();
+		}
+
+		const stateElement = youBar.querySelector("div.state")!;
+		{
+			const nameElement = stateElement.querySelector("div.name")!;
+			nameElement.textContent = self!.display_name;
+		}
+
+
+		const settingsButton = youBar.querySelector("button#settings")!;
+		const settingsIcon = await getIcon("gear-six");
+		settingsButton.innerHTML = settingsIcon;
+		settingsButton.setAttribute("tooltip", "Settings");
+		settingsButton.setAttribute("tooltip-orientation", "top");
+
+		youBar.classList.remove("loading");
+	}
 
 	changeState("Fetching guilds", "warning");
 
-	{
-		const sidebar = document.querySelector("nav.sidebar")!;
-		sidebar.classList.add("loading");
+	const sidebar = document.querySelector("nav.sidebar")!;
+	sidebar.classList.add("loading");
 
-		const createElement = async (guildId: string) => {
-			const guildElement = document.createElement("button");
-			guildElement.classList.add("guild");
+	const createElement = async (guildId: string) => {
+		const guildElement = document.createElement("button");
+		guildElement.classList.add("guild");
 
-			let guild: Guild<true> | Guild<false> | null = null;
-			try {
-				guild = await discordClient.guilds.get(guildId) ?? null;
-				console.log(guild);
-			} catch (error) {
-				console.error(error);
-			}
-
-			if (guild) {
-				const icon = guild.icon ? document.createElement("img") : document.createElement("span");
-				icon.classList.add("icon");
-				if (guild.icon) (icon as HTMLImageElement).src = guild.icon.getURL(undefined, 256, "high", undefined, undefined, true);
-				else (icon as HTMLSpanElement).textContent = guild.name.substring(0, 2).toUpperCase();
-				guildElement.append(icon);
-			} else guildElement.innerHTML = await getIcon("question-circle");
-
-			const label = document.createElement("label");
-			label.textContent = guild ? guild.name : "Guild is unreachable";
-			guildElement.append(label);
-
-			return guildElement;
-		};
-
-		const directMessagesElement = document.querySelector("button#direct-messages")!;
-		directMessagesElement.innerHTML = await getIcon("chats-circle");
-		const directMessagesLabel = document.createElement("label");
-		directMessagesLabel.textContent = "Direct Messages";
-		directMessagesElement.append(directMessagesLabel);
-
-		const favoritesElement = document.querySelector("button#favorites")!;
-		favoritesElement.innerHTML = await getIcon("star");
-		const favoritesLabel = document.createElement("label");
-		favoritesLabel.textContent = "Favorites";
-		favoritesElement.append(favoritesLabel);
-
-		const guildContainer = document.querySelector("section.guilds")!;
-		guildContainer.classList.add("loading");
-		guildContainer.innerHTML = "";
-		for (const folder of discordClient.settings!.guild_folders) {
-			if (folder.id) {
-				for (const guildId of folder.guild_ids) guildContainer.append(await createElement(guildId));
-			} else guildContainer.append(await createElement(folder.guild_ids[0]));
+		let guild: Guild<true> | Guild<false> | null = null;
+		try {
+			guild = await discordClient.guilds.get(guildId) ?? null;
+			console.log(guild);
+		} catch (error) {
+			console.error(error);
 		}
 
-		const createGuildElement = document.querySelector("button#create-guild")!;
-		createGuildElement.innerHTML = await getIcon("plus-circle");
-		const createGuildLabel = document.createElement("label");
-		createGuildLabel.textContent = "Create Guild";
-		createGuildElement.append(createGuildLabel);
+		if (guild) {
+			const icon = guild.icon ? document.createElement("img") : document.createElement("span");
+			icon.classList.add("icon");
+			if (guild.icon) (icon as HTMLImageElement).src = guild.icon.getURL(undefined, 256, "high", undefined, undefined, true);
+			else (icon as HTMLSpanElement).textContent = guild.name.substring(0, 2).toUpperCase();
+			guildElement.append(icon);
+		} else {
+			const questionIcon = await getIcon("question-circle");
+			guildElement.innerHTML = questionIcon;
+		}
 
-		const exploreGuildsElement = document.querySelector("button#explore-guilds")!;
-		exploreGuildsElement.innerHTML = await getIcon("compass");
-		const exploreGuildsLabel = document.createElement("label");
-		exploreGuildsLabel.textContent = "Explore Guilds";
-		exploreGuildsElement.append(exploreGuildsLabel);
+		guildElement.setAttribute("tooltip", guild ? guild.name : "Guild is unreachable");
+		return guildElement;
+	};
+
+	const directMessagesElement = sidebar.querySelector("button#direct-messages")!;
+	const favoritesElement = sidebar.querySelector("button#favorites")!;
+	const createGuildElement = sidebar.querySelector("button#create-guild")!;
+	const exploreGuildsElement = sidebar.querySelector("button#explore-guilds")!;
+
+	const [dmIcon, favIcon, createIcon, exploreIcon] = await Promise.all([
+		getIcon("chats-circle"),
+		getIcon("star"),
+		getIcon("plus-circle"),
+		getIcon("compass")
+	]);
+
+	directMessagesElement.innerHTML = dmIcon;
+	directMessagesElement.setAttribute("tooltip", "Direct Messages");
+
+	favoritesElement.innerHTML = favIcon;
+	favoritesElement.setAttribute("tooltip", "Favorites");
+
+	const guildContainer = sidebar.querySelector("section.guilds");
+	if (guildContainer) {
+		guildContainer.innerHTML = "";
+		const guildIds: Snowflake[] = [];
+		for (const folder of discordClient.settings!.guild_folders) {
+			for (const guildId of folder.guild_ids) guildIds.push(guildId);
+		}
+
+		const guildElementsList = await Promise.all(guildIds.map((id) => createElement(id)));
+
+		const guildElementMap = new Map<Snowflake, HTMLElement>();
+		guildIds.forEach((id, index) => guildElementMap.set(id, guildElementsList[index]));
+
+		for (const folder of discordClient.settings!.guild_folders) {
+			if (folder.id) {
+				const folderElement = document.createElement("div");
+				folderElement.classList.add("folder");
+
+				for (const guildId of folder.guild_ids) {
+					const guildElement = guildElementMap.get(guildId);
+					if (guildElement) folderElement.append(guildElement);
+				}
+
+				guildContainer.append(folderElement);
+			} else if (folder.guild_ids.length > 0) {
+				const guildElement = guildElementMap.get(folder.guild_ids[0]);
+				if (guildElement) guildContainer.append(guildElement);
+			}
+		}
+
+		createGuildElement.innerHTML = createIcon;
+		createGuildElement.setAttribute("tooltip", "Create Guild");
+
+		exploreGuildsElement.innerHTML = exploreIcon;
+		exploreGuildsElement.setAttribute("tooltip", "Explore Guilds");
 
 		sidebar.classList.remove("loading");
-	};
+	}
 
 	changeState("Sending status", "warning");
 
