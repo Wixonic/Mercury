@@ -36,11 +36,12 @@ const ready = async () => {
 		discordClient.fetchSettings(),
 		discordClient.self()
 	]);
+	console.log("Settings:", settings);
+	console.log("Self:", self);
 	if (currentLoadToken !== loadToken) return;
-	console.log(settings, self);
 
-	const youBar = document.querySelector("nav.you-bar");
-	if (youBar) {
+	const youBar = document.querySelector("nav.you-bar") as HTMLElement;
+	{
 		youBar.classList.add("loading");
 
 		const avatarContainer = youBar.querySelector("div.avatar")!;
@@ -63,12 +64,16 @@ const ready = async () => {
 			nameElement.textContent = self!.display_name;
 		}
 
+		const nameplate = youBar.querySelector("img.nameplate") as HTMLImageElement;
+		if (self!.collectibles?.nameplate?.asset) {
+			nameplate.classList.remove("hidden");
+			nameplate.src = `https://cdn.discordapp.com/media/v1/collectibles-shop/${self!.collectibles.nameplate.sku_id}/animated`;
+			nameplate.style.setProperty("--palette", `var(--palette-${self!.collectibles.nameplate.palette})`);
+		} else nameplate.classList.add("hidden");
 
 		const settingsButton = youBar.querySelector("button#settings")!;
 		const settingsIcon = await getIcon("gear-six");
 		settingsButton.innerHTML = settingsIcon;
-		settingsButton.setAttribute("tooltip", "Settings");
-		settingsButton.setAttribute("tooltip-orientation", "top");
 
 		youBar.classList.remove("loading");
 	}
@@ -110,57 +115,48 @@ const ready = async () => {
 	const createGuildElement = sidebar.querySelector("button#create-guild")!;
 	const exploreGuildsElement = sidebar.querySelector("button#explore-guilds")!;
 
-	const [dmIcon, favIcon, createIcon, exploreIcon] = await Promise.all([
+	const [directMessagesIcon, favoritesIcon, createGuildIcon, exploreGuildsIcon] = await Promise.all([
 		getIcon("chats-circle"),
 		getIcon("star"),
 		getIcon("plus-circle"),
 		getIcon("compass")
 	]);
 
-	directMessagesElement.innerHTML = dmIcon;
-	directMessagesElement.setAttribute("tooltip", "Direct Messages");
+	directMessagesElement.innerHTML = directMessagesIcon;
+	favoritesElement.innerHTML = favoritesIcon;
+	createGuildElement.innerHTML = createGuildIcon;
+	exploreGuildsElement.innerHTML = exploreGuildsIcon;
 
-	favoritesElement.innerHTML = favIcon;
-	favoritesElement.setAttribute("tooltip", "Favorites");
-
-	const guildContainer = sidebar.querySelector("section.guilds");
-	if (guildContainer) {
-		guildContainer.innerHTML = "";
-		const guildIds: Snowflake[] = [];
-		for (const folder of discordClient.settings!.guild_folders) {
-			for (const guildId of folder.guild_ids) guildIds.push(guildId);
-		}
-
-		const guildElementsList = await Promise.all(guildIds.map((id) => createElement(id)));
-
-		const guildElementMap = new Map<Snowflake, HTMLElement>();
-		guildIds.forEach((id, index) => guildElementMap.set(id, guildElementsList[index]));
-
-		for (const folder of discordClient.settings!.guild_folders) {
-			if (folder.id) {
-				const folderElement = document.createElement("div");
-				folderElement.classList.add("folder");
-
-				for (const guildId of folder.guild_ids) {
-					const guildElement = guildElementMap.get(guildId);
-					if (guildElement) folderElement.append(guildElement);
-				}
-
-				guildContainer.append(folderElement);
-			} else if (folder.guild_ids.length > 0) {
-				const guildElement = guildElementMap.get(folder.guild_ids[0]);
-				if (guildElement) guildContainer.append(guildElement);
-			}
-		}
-
-		createGuildElement.innerHTML = createIcon;
-		createGuildElement.setAttribute("tooltip", "Create Guild");
-
-		exploreGuildsElement.innerHTML = exploreIcon;
-		exploreGuildsElement.setAttribute("tooltip", "Explore Guilds");
-
-		sidebar.classList.remove("loading");
+	const guildContainer = sidebar.querySelector("section.guilds")!;
+	guildContainer.innerHTML = "";
+	const guildIds: Snowflake[] = [];
+	for (const folder of settings.guildFolders!.folders) {
+		for (const guildId of folder.guildIds) guildIds.push(guildId);
 	}
+
+	const guildElementsList = await Promise.all(guildIds.map((id) => createElement(id)));
+
+	const guildElementMap = new Map<Snowflake, HTMLElement>();
+	guildIds.forEach((id, index) => guildElementMap.set(id, guildElementsList[index]));
+
+	for (const folder of settings.guildFolders!.folders) {
+		if (folder.id) {
+			const folderElement = document.createElement("div");
+			folderElement.classList.add("folder");
+
+			for (const guildId of folder.guildIds) {
+				const guildElement = guildElementMap.get(guildId);
+				if (guildElement) folderElement.append(guildElement);
+			}
+
+			guildContainer.append(folderElement);
+		} else {
+			const guildElement = guildElementMap.get(folder.guildIds[0]);
+			if (guildElement) guildContainer.append(guildElement);
+		}
+	}
+
+	sidebar.classList.remove("loading");
 
 	changeState("Sending status", "warning");
 

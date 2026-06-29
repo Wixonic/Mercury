@@ -266,6 +266,13 @@ export class User<Ready extends boolean = true> {
 			...data.avatar_decoration_data,
 			asset: new CDNElement("/avatar-decoration-presets", data.avatar_decoration_data.asset)
 		};
+		if (data.collectibles) this.collectibles = {
+			...data.collectibles,
+			nameplate: data.collectibles.nameplate ? {
+				...data.collectibles.nameplate,
+				asset: new CDNElement(`/assets/collectibles/`, data.collectibles.nameplate.asset)
+			} : null
+		};
 		if (data.banner) this.banner = new CDNElement(`/banners/${data.id}`, data.banner);
 		if (data.accent_color !== undefined && data.accent_color !== null) this.accent_color = new Color(data.accent_color);
 		if (data.display_name_styles) this.display_name_styles = {

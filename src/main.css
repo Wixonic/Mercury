@@ -20,6 +20,9 @@
 
 	--warning: 40, 100%, 60%;
 	--error: 10, 100%, 50%;
+
+	--palette-none: 0, 0%, 0%;
+	--palette-cobalt: 225, 100%, 38%;
 	/* COLORS */
 
 	/* FONT */
@@ -34,6 +37,8 @@
 	font-family: inherit;
 
 	box-sizing: border-box;
+
+	overflow: hidden;
 
 	-webkit-appearance: none;
 	appearance: none;
@@ -73,7 +78,6 @@ body {
 	margin: 0;
 	padding: 0;
 
-	overflow: hidden;
 	overscroll-behavior: none;
 }
 
@@ -100,4 +104,20 @@ body {
 
 [data-tauri-drag-region] {
 	user-select: none;
+}
+
+.icon {
+	width: 1.2em;
+	height: 1.2em;
+
+	vertical-align: -0.225em;
+
+	margin: 0;
+	padding: 0;
+}
+
+.icon img,
+.icon svg {
+	width: 100%;
+	height: 100%;
 }

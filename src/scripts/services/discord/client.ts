@@ -1,12 +1,14 @@
 import WebSocket, { Message as WebSocketMessage } from "@tauri-apps/plugin-websocket";
 
+import { PreloadedUserSettings } from "discord-protos";
+
 import { Client, RestClient } from "/scripts/lib/client.ts";
 import { store, type Session } from "/scripts/lib/store.ts";
 import { join, fake, wait, Color } from "/scripts/lib/utils.ts";
 
 import { GuildCollection } from "/scripts/services/discord/guild.ts";
 import { Snowflake } from "/scripts/services/discord/snowflake.ts";
-import { UserCollection, UserCustomStatus, UserStatusType } from "/scripts/services/discord/user.ts";
+import { UserCollection } from "/scripts/services/discord/user.ts";
 
 type GatewayMessage = {
 	code: number;
@@ -15,32 +17,157 @@ type GatewayMessage = {
 	event?: string;
 };
 
-type GuildFolder = {
-	id?: Snowflake;
-	name?: string;
-	guild_ids: Snowflake[];
-	color?: Color;
+type DateKey =
+	| "lastDismissedAtMs" | "guildRecentsDismissedAt" | "premiumTier0ModalDismissedAt"
+	| "guildOnboardingUpsellDismissedAt" | "safetyUserSentimentNoticeDismissedAt"
+	| "lastGiftIntentDismissedAtMs" | "focusModeExpiresAtMs" | "expiresAtMs"
+	| "createdAtMs" | "statusExpiresAtMs" | "statusCreatedAtMs" | "modifiedAt"
+	| "feedGeneratedAt" | "lastImpressionTime" | "optOutExpiryTime";
+
+type ColorKey = "color";
+
+type SnowflakeKey =
+	| "id" | "emojiId" | "lastReceivedChangelogId" | "notificationCenterAckedBeforeId"
+	| "parentId" | "soundId" | "guildId" | "lastDismissedObjectId";
+
+type Unwrap<T, K> =
+	T extends Uint8Array ? Uint8Array :
+	T extends Date ? Date :
+	T extends { seconds: bigint, nanos: number } ? Date :
+	T extends { value: infer V } ? (V extends bigint ? Snowflake : V) :
+	T extends bigint ? (K extends SnowflakeKey ? Snowflake : bigint) :
+	T extends bigint[] ? Snowflake[] :
+	T extends (infer U)[] ? DeepParsed<U>[] :
+	T extends object ? DeepParsed<T> :
+	T;
+
+export type DeepParsed<T> = {
+	[K in keyof T]:
+	K extends ColorKey ? Color :
+	K extends DateKey ? Date :
+	Unwrap<T[K], K>
+};
+
+export type ClientSettings = DeepParsed<PreloadedUserSettings>;
+
+const dateKeys: string[] = [
+	"lastDismissedAtMs", "guildRecentsDismissedAt", "premiumTier0ModalDismissedAt",
+	"guildOnboardingUpsellDismissedAt", "safetyUserSentimentNoticeDismissedAt",
+	"lastGiftIntentDismissedAtMs", "focusModeExpiresAtMs", "expiresAtMs",
+	"createdAtMs", "statusExpiresAtMs", "statusCreatedAtMs", "modifiedAt",
+	"feedGeneratedAt", "lastImpressionTime", "optOutExpiryTime"
+];
+
+const colorKeys: string[] = [
+	"color"
+];
+
+const snowflakeKeys: string[] = [
+	"id", "emojiId", "lastReceivedChangelogId", "notificationCenterAckedBeforeId",
+	"parentId", "soundId", "guildId", "lastDismissedObjectId"
+];
+
+const snowflakeArrayKeys: string[] = [
+	"guildIds", "guildPositions", "allowedGuildIds", "allowedUserIds",
+	"restrictedGuildIds", "activityRestrictedGuildIds", "activityJoiningRestrictedGuildIds",
+	"messageRequestRestrictedGuildIds"
+];
+
+const wrapperKeys: string[] = [
+	"id", "name", "color", "status", "showCurrentGame", "locale", "timezoneOffset", "timezoneName",
+	"backgroundGradientPresetId", "channelListLayout", "messagePreviews", "searchResultExactCountEnabled",
+	"happeningNowCardsDisabled", "guildVisible", "alwaysPreviewVideo", "afkTimeout", "streamNotificationsEnabled",
+	"nativePhoneIntegrationEnabled", "disableStreamPreviews", "soundmojiVolume", "profanity", "sexualContent",
+	"slurs", "emojiId", "emojiName", "animated", "disableDoubleTap", "lastDismissedOutboundPromotionStartDate",
+	"allowActivityPartyPrivacyFriends", "allowActivityPartyPrivacyVoiceChannel", "detectPlatformAccounts",
+	"passwordless", "contactSyncEnabled", "friendSourceFlags", "friendDiscoveryFlags", "defaultMessageRequestRestricted",
+	"dropsOptedOut", "nonSpamRetrainingOptIn", "familyCenterEnabled", "familyCenterEnabledV2", "hideLegacyUsername",
+	"inappropriateConversationWarnings", "recentGamesEnabled", "allowGameFriendDmsInDiscord", "defaultGuildsRestrictedV2",
+	"quests3PDataOptedOut", "showLocalTime", "hideFriendRequestNotes", "rtcPanelShowVoiceStates", "installShortcutDesktop",
+	"installShortcutStartMenu", "disableGamesTab", "disableHomeAutoNav", "allowFriends", "autoBroadcast", "allowVoiceRecording",
+	"lastImpressionTime", "optOutExpiryTime", "statusCreatedAtMs"
+];
+
+export const deepUnwrap = (value: any, key?: string): any => {
+	if (value === null || value === undefined || value instanceof Uint8Array || value instanceof Date) return value;
+
+	if (typeof value === "object" && "value" in value && Object.keys(value).length === 1) {
+		value = value.value;
+		if (value === null || value === undefined) return value;
+	}
+
+	if (key && dateKeys.includes(key)) {
+		if (typeof value === "bigint" || typeof value === "number") return new Date(Number(value));
+		if (typeof value === "object" && "seconds" in value) return new Date(Number(value.seconds) * 1000);
+	}
+
+	if (key && colorKeys.includes(key)) {
+		if (value !== undefined && value !== null) return new Color(Number(value));
+		return undefined;
+	}
+
+	if (typeof value === "bigint") return value.toString();
+	if (Array.isArray(value)) return value.map((item) => deepUnwrap(item, key));
+
+	if (typeof value === "object") {
+		if ("seconds" in value && "nanos" in value) return new Date(Number(value.seconds) * 1000);
+
+		const result: any = {};
+		for (const childKey of Object.keys(value)) result[childKey] = deepUnwrap(value[childKey], childKey);
+		return result;
+	}
+
+	return value;
+};
+
+export const deepWrap = (value: any, key?: string, parentKey?: string): any => {
+	if (value === null || value === undefined) return value;
+
+	if (value instanceof Date) {
+		if (key === "statusCreatedAtMs" || key === "lastImpressionTime" || key === "optOutExpiryTime") {
+			return { value: BigInt(value.getTime()) };
+		}
+		if (key === "guildRecentsDismissedAt" || key === "premiumTier0ModalDismissedAt" || key === "guildOnboardingUpsellDismissedAt" || key === "safetyUserSentimentNoticeDismissedAt") {
+			return { seconds: BigInt(Math.floor(value.getTime() / 1000)), nanos: 0 };
+		}
+		return BigInt(value.getTime());
+	}
+
+	if (value instanceof Color) {
+		if (key === "color") return { value: BigInt(value.toJSON()) };
+		return BigInt(value.toJSON());
+	}
+
+	if (key && wrapperKeys.includes(key)) {
+		if (key === "id" && parentKey === "customAsset" && typeof value === "string") return BigInt(value);
+		if (key === "id" && typeof value === "string") return { value: BigInt(value) };
+		if (key === "color") return { value: BigInt(value.toJSON()) };
+		if (key === "emojiId" && parentKey === "customStatus" && typeof value === "string") return BigInt(value);
+		if (key === "emojiId" && typeof value === "string") return { value: BigInt(value) };
+		return { value };
+	}
+
+	if (key && snowflakeKeys.includes(key) && typeof value === "string") {
+		return BigInt(value);
+	}
+
+	if (key && snowflakeArrayKeys.includes(key) && Array.isArray(value)) {
+		return value.map((id: any) => BigInt(id));
+	}
+
+	if (Array.isArray(value)) return value.map((item) => deepWrap(item, key, parentKey));
+
+	if (typeof value === "object") {
+		const result: any = {};
+		for (const childKey of Object.keys(value)) result[childKey] = deepWrap(value[childKey], childKey, key);
+		return result;
+	}
+
+	return value;
 };
 
 export const parseClientSettings = (data: any): ClientSettings => {
-	if (!data) return data;
-	const settings = { ...data };
-
-	if (settings.custom_status) {
-		settings.custom_status = {
-			...settings.custom_status,
-			expires_at: settings.custom_status.expires_at ? new Date(settings.custom_status.expires_at) : null
-		};
-	}
-
-	if (settings.guild_folders) {
-		settings.guild_folders = settings.guild_folders.map((folder: any) => ({
-			...folder,
-			color: (folder.color !== undefined && folder.color !== null) ? new Color(folder.color) : undefined
-		}));
-	}
-
-	return settings;
+	return deepUnwrap(data);
 };
 
 export enum ClientSettingsStickerAnimationOption {
@@ -72,47 +199,6 @@ export enum ClientSettingsSlayerSdkReceiveInGameDms {
 	All = 1,
 	UsersWithGame = 2,
 	None = 3
-};
-
-export interface ClientSettings {
-	activity_restricted_guild_ids: Snowflake[];
-	activity_joining_restricted_guild_ids: Snowflake[];
-	afk_timeout: number;
-	allow_accessibility_detection: boolean;
-	allow_activity_party_privacy_friends: boolean;
-	allow_activity_party_privacy_voice_channel: boolean;
-	animate_emoji: boolean;
-	animate_stickers: ClientSettingsStickerAnimationOption;
-	contact_sync_enabled: boolean;
-	convert_emoticons: boolean;
-	custom_status?: UserCustomStatus;
-	default_guilds_restricted: boolean;
-	detect_platform_accounts: boolean;
-	developer_mode: boolean;
-	disable_games_tab: boolean;
-	enable_tts_command: boolean;
-	explicit_content_filter: ClientSettingsExplicitContentFilter;
-	friend_discovery_flags: ClientSettingsFriendDiscoveryFlags;
-	friend_source_flags?: ClientSettingsFriendSourceFlags;
-	gif_auto_play: boolean;
-	guild_folders: GuildFolder[];
-	inline_attachment_media: boolean;
-	inline_embed_media: boolean;
-	locale: string;
-	message_display_compact: boolean;
-	native_phone_integration_enabled: boolean;
-	render_embeds: boolean;
-	render_reactions: boolean;
-	restricted_guilds: Snowflake[];
-	show_current_game: boolean;
-	slayer_sdk_receive_dms_in_game: ClientSettingsSlayerSdkReceiveInGameDms;
-	soundboard_volume: number;
-	status: UserStatusType;
-	stream_notifications_enabled: boolean;
-	theme: "dark" | "light" | "darker" | "midnight";
-	timezone_offset: number;
-	view_nsfw_commands: boolean;
-	view_nsfw_guilds: boolean;
 };
 
 export class DiscordClient extends Client {
@@ -200,7 +286,11 @@ export class DiscordClient extends Client {
 					return;
 				}
 				this.ws = ws;
-				this.unlistenGateway = this.ws.addListener(this.gateway.bind(this));
+				const listenerGeneration = generation;
+				this.unlistenGateway = this.ws.addListener((message) => {
+					if (listenerGeneration !== this.connectionGeneration) return;
+					this.gateway(message);
+				});
 				this.startHelloWatchdog();
 			} catch (error) {
 				console.error("Failed to initialize Discord client:", error);
@@ -262,7 +352,11 @@ export class DiscordClient extends Client {
 				return;
 			}
 			this.ws = ws;
-			this.unlistenGateway = this.ws.addListener(this.gateway.bind(this));
+			const listenerGeneration = generation;
+			this.unlistenGateway = this.ws.addListener((message) => {
+				if (listenerGeneration !== this.connectionGeneration) return;
+				this.gateway(message);
+			});
 			this.isReconnecting = false;
 			this.startHelloWatchdog();
 		} catch (error: any) {
@@ -286,6 +380,7 @@ export class DiscordClient extends Client {
 
 		if (this.heartbeat) clearInterval(this.heartbeat);
 		this.heartbeat = undefined;
+		this.heartbeatTimestamp = undefined;
 		if (this.helloWatchdog) clearTimeout(this.helloWatchdog);
 		this.helloWatchdog = undefined;
 
@@ -348,6 +443,7 @@ export class DiscordClient extends Client {
 				this.resetAndRedirectToLogin();
 				return;
 			}
+			this.ws = undefined;
 			this.disconnect(true);
 			return;
 		}
@@ -411,15 +507,15 @@ export class DiscordClient extends Client {
 
 			case 9: // Invalid Session
 				console.warn("Invalid Session");
-				if (message.data === true) this.sendResume();
-				else {
+				if (message.data !== true) {
 					this.sessionId = undefined;
 					this.sequence = undefined;
+					this.resumeGatewayURL = undefined;
 					sessionStorage.removeItem("discord_session_id");
 					sessionStorage.removeItem("discord_sequence");
 					sessionStorage.removeItem("discord_resume_gateway_url");
-					if (this.token) this.sendIdentify();
 				}
+				this.disconnect(true);
 				break;
 
 			case 10: // Hello
@@ -430,7 +526,7 @@ export class DiscordClient extends Client {
 				this.sendHeartbeat();
 				this.heartbeat = setInterval(() => this.sendHeartbeat(), message.data.heartbeat_interval);
 
-				if (this.sessionId && this.sequence !== null && this.resumeGatewayURL && this.token) this.sendResume();
+				if (this.sessionId && this.sequence != null && this.resumeGatewayURL && this.token) this.sendResume();
 				else if (this.token) this.sendIdentify();
 				break;
 
@@ -447,17 +543,22 @@ export class DiscordClient extends Client {
 	};
 
 	async fetchSettings(): Promise<ClientSettings> {
-		const response = await this.rest.request("/users/@me/settings");
-		this.settings = parseClientSettings(await response.json());
+		const response = await this.rest.request("/users/@me/settings-proto/1");
+		const data = await response.json();
+		this.settings = parseClientSettings(PreloadedUserSettings.fromBase64(data.settings));
 		return this.settings!;
 	};
 
 	async patchSettings(settings: Partial<ClientSettings>): Promise<ClientSettings> {
-		const response = await this.rest.request("/users/@me/settings", {
+		const response = await this.rest.request("/users/@me/settings-proto/1", {
 			method: "PATCH",
-			body: JSON.stringify(settings)
+			body: JSON.stringify({
+				settings: PreloadedUserSettings.toBase64(deepWrap(settings)),
+				required_data_version: this.settings?.versions?.dataVersion
+			})
 		});
-		this.settings = parseClientSettings(await response.json());
+		const data = await response.json();
+		this.settings = parseClientSettings(PreloadedUserSettings.fromBase64(data.settings));
 		return this.settings!;
 	};
 
@@ -485,13 +586,15 @@ export class DiscordClient extends Client {
 		this.heartbeatTimestamp = performance.now();
 		this.send({
 			op: 1, // Heartbeat
-			d: this.sequence
+			d: this.sequence ?? null
 		});
 	};
 
 	private async sendIdentify() {
+		const identifyGeneration = this.connectionGeneration;
 		const lastIdentify = sessionStorage.getItem("discord_last_identify");
 		if (lastIdentify && (Date.now() - parseInt(lastIdentify, 10)) < 5000) await wait(5000 - (Date.now() - parseInt(lastIdentify, 10)));
+		if (identifyGeneration !== this.connectionGeneration) return;
 
 		sessionStorage.setItem("discord_last_identify", Date.now().toString());
 		this.send({
@@ -518,13 +621,12 @@ export class DiscordClient extends Client {
 	};
 
 	private async sendResume() {
-		this.dispatchEvent(new CustomEvent("disconnected"));
 		this.send({
 			op: 6,
 			d: {
 				token: this.token,
 				session_id: this.sessionId,
-				seq: this.sequence
+				seq: this.sequence ?? null
 			}
 		});
 	};

@@ -3,9 +3,7 @@ let currentCleanup: (() => void) | null = null;
 
 export const view = async (path: string): Promise<void> => {
 	let resolvedPath = path;
-	if (path.startsWith("/views/")) {
-		resolvedPath = `/components/app/views/${path.substring("/views/".length)}`;
-	}
+	if (path.startsWith("/views/")) resolvedPath = `/components/app/views/${path.substring("/views/".length)}`;
 
 	const htmlPath = resolvedPath;
 	const baseName = resolvedPath.substring(0, resolvedPath.lastIndexOf("."));
@@ -18,6 +16,7 @@ export const view = async (path: string): Promise<void> => {
 		} catch (error) {
 			console.error("Error cleaning up previous view:", error);
 		}
+
 		currentCleanup = null;
 	}
 
@@ -26,16 +25,10 @@ export const view = async (path: string): Promise<void> => {
 		currentStyleElement = null;
 	}
 
-	const mainElement = document.querySelector("main");
-	if (!mainElement) {
-		throw new Error("Could not find main element");
-	}
+	const mainElement = document.querySelector("main")!;
 
 	const response = await fetch(htmlPath);
-	if (!response.ok) {
-		throw new Error(`Failed to fetch HTML for view: ${response.statusText}`);
-	}
-
+	if (!response.ok) throw new Error(`Failed to fetch HTML for view: ${response.statusText}`);
 	mainElement.innerHTML = await response.text();
 
 	try {
@@ -54,13 +47,8 @@ export const view = async (path: string): Promise<void> => {
 	try {
 		const module = await import(jsPath);
 		if (module) {
-			if (typeof module.default === "function") {
-				currentCleanup = module.default(mainElement);
-			} else if (typeof module.render === "function") {
-				currentCleanup = module.render(mainElement);
-			} else if (typeof module.init === "function") {
-				currentCleanup = module.init(mainElement);
-			}
+			currentCleanup = module.render(mainElement);
+			if (module.title) document.querySelector("header.titlebar .location")!.innerHTML = module.title;
 		}
 	} catch (error) {
 		console.warn(`Could not import script for view: ${jsPath}`, error);
