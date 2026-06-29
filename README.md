@@ -1,7 +1,7 @@
 # Mercury
 > Lightweight, fast, privacy-first, and powerful Discord client.
 
-[![GitHub Release](https://img.shields.io/github/v/release/Wixonic/Mercury?display_name=tag&style=flat&label=Version)](https://github.com/Wixonic/Mercury/releases)
+[![Latest stable release](https://img.shields.io/github/v/release/Wixonic/Mercury?display_name=tag&label=Latest%20stable%20release)](https://github.com/Wixonic/Mercury/releases) [![Latest release](https://img.shields.io/github/v/tag/Wixonic/Mercury?display_name=tag&label=Latest%20pre-release)](https://github.com/Wixonic/Mercury/tags)<br />
 
 [![Wakatime](https://wakatime.com/badge/github/Wixonic/Mercury.svg?style=flat)](https://wakatime.com/badge/github/Wixonic/Mercury)
 [![Contributors](https://img.shields.io/github/contributors/Wixonic/Mercury?color=%2308F&label=Contributors)](https://github.com/Wixonic/Mercury/graphs/contributors)
