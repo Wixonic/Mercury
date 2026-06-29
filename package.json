@@ -9,7 +9,8 @@
 	"scripts": {
 		"dev": "node build.mjs --serve",
 		"build": "node build.mjs",
-		"tauri": "tauri"
+		"tauri": "tauri",
+		"icon:compile": "actool src-tauri/icons/icon.icon --compile src-tauri/icons --app-icon icon --target-device mac --platform macosx --minimum-deployment-target 26.0 --output-partial-info-plist src-tauri/icons/partial.plist"
 	},
 	"dependencies": {
 		"@tauri-apps/api": "^2",
