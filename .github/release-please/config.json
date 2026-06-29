@@ -1,16 +1,17 @@
 {
+	"bootstrap-sha": "bcb3d40998fbf01f1fab0ac99ab1389d6cad4896",
 	"packages": {
 		".": {
-			"release-type": "simple",
+			"release-type": "node",
 			"extra-files": [
 				{
 					"type": "json",
-					"path": "deno.json",
+					"path": "src-tauri/tauri.conf.json",
 					"jsonpath": "$.version"
 				}
 			],
 			"pull-request-header": "Automatic release",
-			"pull-request-title-pattern": "WixiBot v${version}"
+			"pull-request-title-pattern": "v${version}"
 		}
 	}
 }
