@@ -170,10 +170,14 @@ jobs:
           PREFIX="Mercury.$VERSION.${{ matrix.platform_short }}.${{ matrix.arch_short }}"
           BUNDLE="${{ matrix.bundle_path }}"
           for f in "$BUNDLE/dmg/"*.dmg; do
-            [ -f "$f" ] && gh release upload "$TAG" "$f=$PREFIX.dmg" --clobber
+            [ -f "$f" ] || continue
+            cp "$f" "$(dirname "$f")/$PREFIX.dmg"
+            gh release upload "$TAG" "$(dirname "$f")/$PREFIX.dmg" --clobber
           done
           for f in "$BUNDLE/macos/"*.app.tar.gz; do
-            [ -f "$f" ] && gh release upload "$TAG" "$f=$PREFIX.app.tar.gz" --clobber
+            [ -f "$f" ] || continue
+            cp "$f" "$(dirname "$f")/$PREFIX.app.tar.gz"
+            gh release upload "$TAG" "$(dirname "$f")/$PREFIX.app.tar.gz" --clobber
           done
 
       - name: Upload artifacts (Linux)
@@ -186,13 +190,19 @@ jobs:
           PREFIX="Mercury.$VERSION.${{ matrix.platform_short }}.${{ matrix.arch_short }}"
           BUNDLE="${{ matrix.bundle_path }}"
           for f in "$BUNDLE/deb/"*.deb; do
-            [ -f "$f" ] && gh release upload "$TAG" "$f=$PREFIX.deb" --clobber
+            [ -f "$f" ] || continue
+            cp "$f" "$(dirname "$f")/$PREFIX.deb"
+            gh release upload "$TAG" "$(dirname "$f")/$PREFIX.deb" --clobber
           done
           for f in "$BUNDLE/rpm/"*.rpm; do
-            [ -f "$f" ] && gh release upload "$TAG" "$f=$PREFIX.rpm" --clobber
+            [ -f "$f" ] || continue
+            cp "$f" "$(dirname "$f")/$PREFIX.rpm"
+            gh release upload "$TAG" "$(dirname "$f")/$PREFIX.rpm" --clobber
           done
           for f in "$BUNDLE/appimage/"*.AppImage; do
-            [ -f "$f" ] && gh release upload "$TAG" "$f=$PREFIX.AppImage" --clobber
+            [ -f "$f" ] || continue
+            cp "$f" "$(dirname "$f")/$PREFIX.AppImage"
+            gh release upload "$TAG" "$(dirname "$f")/$PREFIX.AppImage" --clobber
           done
 
       - name: Upload artifacts (Windows)
@@ -205,10 +215,14 @@ jobs:
           $PREFIX = "Mercury.$VERSION.${{ matrix.platform_short }}.${{ matrix.arch_short }}"
           $BUNDLE = "${{ matrix.bundle_path }}"
           Get-ChildItem "$BUNDLE/msi/*.msi" -ErrorAction SilentlyContinue | ForEach-Object {
-            gh release upload $env:TAG "$($_.FullName)=$PREFIX.msi" --clobber
+            $dest = Join-Path $_.DirectoryName "$PREFIX.msi"
+            Copy-Item $_.FullName $dest
+            gh release upload $env:TAG $dest --clobber
           }
           Get-ChildItem "$BUNDLE/nsis/*-setup.exe" -ErrorAction SilentlyContinue | ForEach-Object {
-            gh release upload $env:TAG "$($_.FullName)=$PREFIX.setup.exe" --clobber
+            $dest = Join-Path $_.DirectoryName "$PREFIX.setup.exe"
+            Copy-Item $_.FullName $dest
+            gh release upload $env:TAG $dest --clobber
           }
 
   publish-release:
