@@ -1,0 +1,63 @@
+.formatted {
+	cursor: text;
+}
+
+.formatted p {
+	margin: 0.5rem 0;
+	padding: 0;
+}
+
+.formatted ul,
+.formatted ol {
+	margin: 0.5rem 0;
+	padding-left: 1.5rem;
+
+	overflow: visible;
+
+	-webkit-appearance: revert;
+	appearance: revert;
+}
+
+.formatted ul {
+	list-style-type: disc;
+}
+
+.formatted ol {
+	list-style-type: decimal;
+}
+
+.formatted li {
+	display: list-item;
+
+	overflow: visible;
+
+	-webkit-appearance: revert;
+	appearance: revert;
+
+	margin: 0.2rem 0;
+}
+
+.formatted .note {
+	position: relative;
+
+	font-size: 0.9em;
+	opacity: 0.8;
+
+	margin: 0.5rem 0 0.5rem 0.5rem;
+	padding-left: 1rem;
+}
+
+.formatted .note::before {
+	content: "";
+
+	position: absolute;
+	inset: 0.5rem;
+	left: 0;
+
+	background: #888;
+
+	width: 0.2rem;
+	height: 100%;
+
+	border-radius: 0.2rem;
+}

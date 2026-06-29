@@ -1,4 +1,5 @@
 import { store } from "/scripts/lib/store.ts";
+import { links } from "/scripts/lib/link.ts";
 import "/scripts/lib/tooltip.ts";
 
 import { DiscordClient } from "/scripts/services/discord/client.ts";
@@ -9,6 +10,7 @@ import { renderLogin } from "/components/login/login.ts";
 export const discordClient = new DiscordClient(new URL("https://discord.com/api/v9"));
 
 const main = () => {
+	links.init();
 	const container = document.body;
 
 	let currentCleanup: (() => void) | null = null;

@@ -1,6 +1,12 @@
 a {
-	color: hsl(var(--blurple));
+	position: relative;
+
+	color: var(--text-link);
 	text-decoration: none;
 
 	cursor: pointer;
+}
+
+a:hover {
+	text-decoration: underline;
 }

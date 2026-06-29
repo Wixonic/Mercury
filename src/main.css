@@ -21,6 +21,8 @@
 	--warning: 40, 100%, 60%;
 	--error: 10, 100%, 50%;
 
+	--text-link: color-mix(in oklab, hsl(var(--blurple)) 100%, hsl(var(--text)) 50%);
+
 	--palette-none: 0, 0%, 0%;
 	--palette-cobalt: 225, 100%, 38%;
 	/* COLORS */
