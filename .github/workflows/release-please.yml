@@ -4,6 +4,12 @@ on:
   push:
     branches:
       - Default
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: "Tag name to build and publish (e.g. v0.1.0)"
+        required: true
+        type: string
 
 permissions:
   contents: write
@@ -24,7 +30,7 @@ jobs:
 
   build-tauri:
     needs: release-please
-    if: ${{ needs.release-please.outputs.release_created }}
+    if: ${{ needs.release-please.outputs.release_created || github.event_name == 'workflow_dispatch' }}
     strategy:
       fail-fast: false
       matrix:
@@ -84,14 +90,14 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tagName: ${{ needs.release-please.outputs.tag_name }}
+          tagName: ${{ github.event_name == 'workflow_dispatch' && inputs.tag_name || needs.release-please.outputs.tag_name }}
           releaseDraft: true
-          prerelease: ${{ startsWith(needs.release-please.outputs.tag_name, 'v0.') || contains(needs.release-please.outputs.tag_name, '-') }}
+          prerelease: ${{ startsWith(github.event_name == 'workflow_dispatch' && inputs.tag_name || needs.release-please.outputs.tag_name, 'v0.') || contains(github.event_name == 'workflow_dispatch' && inputs.tag_name || needs.release-please.outputs.tag_name, '-') }}
           args: ${{ matrix.args }}
 
   publish-release:
     needs: [release-please, build-tauri]
-    if: ${{ needs.release-please.outputs.release_created }}
+    if: ${{ needs.release-please.outputs.release_created || github.event_name == 'workflow_dispatch' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -99,10 +105,11 @@ jobs:
 
       - name: Publish release
         run: |
+          TAG="${{ github.event_name == 'workflow_dispatch' && inputs.tag_name || needs.release-please.outputs.tag_name }}"
           PRERELEASE_FLAG=""
-          if [[ "${{ needs.release-please.outputs.tag_name }}" == v0.* || "${{ needs.release-please.outputs.tag_name }}" == *"-"* ]]; then
+          if [[ "$TAG" == v0.* || "$TAG" == *"-"* ]]; then
             PRERELEASE_FLAG="--prerelease"
           fi
-          gh release edit ${{ needs.release-please.outputs.tag_name }} --draft=false --title "Mercury ${{ needs.release-please.outputs.tag_name }}" $PRERELEASE_FLAG
+          gh release edit "$TAG" --draft=false --title "Mercury $TAG" $PRERELEASE_FLAG
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
