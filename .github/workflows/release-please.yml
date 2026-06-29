@@ -55,6 +55,7 @@ jobs:
             rust_target: "aarch64-apple-darwin,x86_64-apple-darwin"
             platform_short: "macOS"
             arch_short: "universal"
+            cache_key: "universal-apple-darwin"
 
           - platform: "ubuntu-22.04"
             args: ""
@@ -108,7 +109,7 @@ jobs:
         uses: swatinem/rust-cache@v2
         with:
           workspaces: "./src-tauri -> target"
-          key: ${{ matrix.rust_target }}
+          key: ${{ matrix.cache_key || matrix.rust_target }}
 
       - name: Install Linux system dependencies (x86_64)
         if: matrix.platform == 'ubuntu-22.04' && matrix.rust_target == ''
