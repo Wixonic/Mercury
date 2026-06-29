@@ -64,7 +64,7 @@ jobs:
             arch_short: "amd64"
 
           - platform: "ubuntu-22.04"
-            args: "--target aarch64-unknown-linux-gnu"
+            args: "--target aarch64-unknown-linux-gnu --bundles deb,rpm"
             bundle_path: "src-tauri/target/aarch64-unknown-linux-gnu/release/bundle"
             rust_target: "aarch64-unknown-linux-gnu"
             platform_short: "linux"
