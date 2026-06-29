@@ -13,8 +13,7 @@
 ---
 
 > [!CAUTION]
-> Mercury is an alternative open-source Discord client and can be technically considered as a way to automate User Accounts.<br />
-> Therefore it is against [Discord's Terms of Service](https://discord.com/terms) and using it may result in your account being banned or disabled, even though it rarely happens if you treat Discord's servers with respect.<br />
+> Mercury is an alternative open-source Discord client and can be technically considered as a way to automate User Accounts. Therefore it is against [Discord's Terms of Service](https://discord.com/terms) and using it may result in your account being banned or disabled, even though it rarely happens if you treat Discord's servers with respect.<br />
 > **Use at your own risk**.
 
 > [!NOTE]
