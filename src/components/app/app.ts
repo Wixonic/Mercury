@@ -4,6 +4,7 @@ import { getIcon } from "/scripts/lib/icon.ts";
 
 import { Guild } from "/scripts/services/discord/guild.ts";
 
+import { animateIcon } from "/components/app/lib/animated-icon.ts";
 import { view } from "/components/app/lib/view.ts";
 
 import { discordClient } from "/main.ts";
@@ -46,13 +47,17 @@ const ready = async () => {
 
 		const avatarContainer = youBar.querySelector("div.avatar")!;
 		{
-			const avatarImage = avatarContainer.querySelector("img.avatar-image") as HTMLImageElement;
-			avatarImage.src = self!.avatar.getURL(undefined, 256, "high", undefined, undefined, true);
+			const avatarImagePlaceholder = avatarContainer.querySelector(".avatar-image") as HTMLElement;
+			const avatarImage = animateIcon(self!.avatar.getURL(undefined, 256, "high", undefined, undefined, false), self!.avatar.getURL(undefined, 256, "high", undefined, undefined, true));
+			avatarImage.classList.add("avatar-image");
+			avatarImagePlaceholder.replaceWith(avatarImage);
 
+			const avatarDecorationPlaceholder = avatarContainer.querySelector(".avatar-decoration") as HTMLElement;
 			if (self!.avatar_decoration_data) {
-				const avatarDecoration = avatarContainer.querySelector("img.avatar-decoration") as HTMLImageElement;
-				avatarDecoration.src = self!.avatar_decoration_data.asset.getURL(undefined, 256, "high", undefined, undefined, true);
-			}
+				const avatarDecoration = animateIcon(self!.avatar_decoration_data.asset.getURL(undefined, 256, "high", undefined, undefined, false), self!.avatar_decoration_data.asset.getURL(undefined, 256, "high", undefined, undefined, true));
+				avatarDecoration.classList.add("avatar-decoration");
+				avatarDecorationPlaceholder.replaceWith(avatarDecoration);
+			} else avatarDecorationPlaceholder.classList.add("hidden");
 
 			// const statusIndicator = avatarContainer.querySelector("div.status-indicator");
 			// statusIndicator.classList.add();
@@ -64,11 +69,12 @@ const ready = async () => {
 			nameElement.textContent = self!.display_name;
 		}
 
-		const nameplate = youBar.querySelector("img.nameplate") as HTMLImageElement;
+		const nameplate = youBar.querySelector(".nameplate") as HTMLElement;
 		if (self!.collectibles?.nameplate?.asset) {
-			nameplate.classList.remove("hidden");
-			nameplate.src = `https://cdn.discordapp.com/media/v1/collectibles-shop/${self!.collectibles.nameplate.sku_id}/animated`;
-			nameplate.style.setProperty("--palette", `var(--palette-${self!.collectibles.nameplate.palette})`);
+			const animatedNameplate = animateIcon(`https://cdn.discordapp.com/media/v1/collectibles-shop/${self!.collectibles.nameplate.sku_id}/static`, `https://cdn.discordapp.com/media/v1/collectibles-shop/${self!.collectibles.nameplate.sku_id}/animated`);
+			animatedNameplate.classList.add("nameplate");
+			animatedNameplate.style.setProperty("--palette", `var(--palette-${self!.collectibles.nameplate.palette})`);
+			nameplate.replaceWith(animatedNameplate);
 		} else nameplate.classList.add("hidden");
 
 		const settingsButton = youBar.querySelector("button#settings")!;
@@ -96,10 +102,13 @@ const ready = async () => {
 		}
 
 		if (guild) {
-			const icon = guild.icon ? document.createElement("img") : document.createElement("span");
-			icon.classList.add("icon");
-			if (guild.icon) (icon as HTMLImageElement).src = guild.icon.getURL(undefined, 256, "high", undefined, undefined, true);
-			else (icon as HTMLSpanElement).textContent = guild.name.substring(0, 2).toUpperCase();
+			const icon = guild.icon ? animateIcon(guild.icon.getURL(undefined, 256, "high", undefined, undefined, false), guild.icon.getURL(undefined, 256, "high", undefined, undefined, true)) : document.createElement("span");
+
+			if (!guild.icon) {
+				icon.classList.add("icon");
+				(icon as HTMLSpanElement).textContent = guild.name.substring(0, 2).toUpperCase();
+			}
+
 			guildElement.append(icon);
 		} else {
 			const questionIcon = await getIcon("question-circle");

@@ -1,0 +1,25 @@
+.icon.animated {
+	position: relative;
+}
+
+.icon.animated::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+
+	background-image: var(--static-icon, transparent);
+	background-repeat: no-repeat;
+	background-position: center;
+	background-size: contain;
+
+	opacity: 1;
+
+	transition: opacity 0.5s linear;
+}
+
+.icon.animated:hover::after,
+nav.you-bar:hover .icon.animated::after {
+	opacity: 0;
+
+	transition: opacity 0.2s ease-in-out;
+}
