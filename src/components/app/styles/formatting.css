@@ -57,7 +57,7 @@
 	background: #888;
 
 	width: 0.2rem;
-	height: 100%;
+	height: calc(100% - 1rem);
 
 	border-radius: 0.2rem;
 }
