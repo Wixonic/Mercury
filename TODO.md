@@ -1,0 +1,52 @@
+# Working on...
+- [ ] [Channels](https://docs.discord.food/resources/channel)
+	- [ ] Typing Indicator
+	- [ ] Channel Settings
+	- [ ] Permissions
+	- [ ] Threads
+	- [ ] Pinned Messages
+	- [ ] Member List
+	- [ ] Invites
+	- [ ] Webhooks
+	- [ ] Categories
+	- [ ] Direct Messages
+	- [ ] Voice-based Channels
+		- [ ] Microphone
+		- [ ] Camera
+		- [ ] Screen Share
+		- [ ] Soundboard
+		- [ ] Stage Channels
+		- [ ] Voice State
+		- [ ] Voice Regions
+- [ ] [Messages](https://docs.discord.food/resources/message)
+	- [ ] Reactions
+	- [ ] Attachments
+	- [ ] Embeds
+	- [ ] Components
+	- [ ] Stickers
+	- [ ] Emojis
+	- [ ] Replies
+- [ ] [Users](https://docs.discord.food/resources/user)
+	- [ ] Settings
+	- [ ] Relationships
+	- [ ] Connections
+- [ ] [Guilds](https://docs.discord.food/resources/guild)
+	- [ ] Roles
+	- [ ] Settings
+	- [ ] Bans
+- [ ] [Presence](https://docs.discord.food/resources/presence) and enhancing it
+	- [ ] Apple Music Presence (on macOS only)
+	- [ ] Steam Presence (via Steam API, with Steam token)
+	- [ ] Roblox Presence (via Roblox API, with Roblox token)
+	- [ ] Minecraft Presence (Java Edition) (via a mod?)
+- [ ] [Remote Auth Authentication](https://docs.discord.food/remote-authentication/desktop)
+
+# Considering implementing...
+- [ ] [Sending Nitro referrals](https://docs.discord.food/resources/premium-referral)
+- [ ] [Discord status](https://discordstatus.com/api/)
+- [ ] [Entitlements](https://docs.discord.food/resources/entitlement)
+- [ ] [Promotions](https://docs.discord.food/resources/promotion)
+
+# Targeting...
+- [ ] Vencord-like plugins
+- [ ] Mobile Client (iOS/Android)
