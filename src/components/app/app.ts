@@ -4,7 +4,7 @@ import { getIcon } from "/scripts/lib/icon.ts";
 
 import { Guild } from "/scripts/services/discord/guild.ts";
 
-import { animateIcon } from "/components/app/lib/animated-icon.ts";
+import { animateIcon, AnimatedIconElement } from "/components/app/lib/animated-icon.ts";
 import { view } from "/components/app/lib/view.ts";
 
 import { discordClient } from "/main.ts";
@@ -81,6 +81,20 @@ const ready = async () => {
 		const settingsIcon = await getIcon("gear-six");
 		settingsButton.innerHTML = settingsIcon;
 
+		youBar.addEventListener("mouseenter", () => {
+			const animatedIcons = youBar.querySelectorAll(".icon.animated") as NodeListOf<AnimatedIconElement>;
+			animatedIcons.forEach((icon) => {
+				if (typeof icon.play === "function") icon.play();
+			});
+		});
+
+		youBar.addEventListener("mouseleave", () => {
+			const animatedIcons = youBar.querySelectorAll(".icon.animated") as NodeListOf<AnimatedIconElement>;
+			animatedIcons.forEach((icon) => {
+				if (typeof icon.stop === "function") icon.stop();
+			});
+		});
+
 		youBar.classList.remove("loading");
 	}
 
@@ -102,7 +116,7 @@ const ready = async () => {
 		}
 
 		if (guild) {
-			const icon = guild.icon ? animateIcon(guild.icon.getURL(undefined, 256, "high", undefined, undefined, false), guild.icon.getURL(undefined, 256, "high", undefined, undefined, true)) : document.createElement("span");
+			const icon = guild.icon ? animateIcon(guild.icon.getURL(undefined, 256, "high", undefined, undefined, false), guild.icon.getURL(undefined, 256, "high", undefined, undefined, true), guildElement) : document.createElement("span");
 
 			if (!guild.icon) {
 				icon.classList.add("icon");

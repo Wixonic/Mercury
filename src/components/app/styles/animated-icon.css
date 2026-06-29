@@ -1,5 +1,13 @@
 .icon.animated {
 	position: relative;
+
+	display: inline-block;
+
+	opacity: 1;
+
+	overflow: hidden;
+
+	transition: opacity 0.5s linear;
 }
 
 .icon.animated::after {
@@ -9,16 +17,19 @@
 
 	background-image: var(--static-icon, transparent);
 	background-repeat: no-repeat;
-	background-position: center;
-	background-size: contain;
+	background-size: cover;
 
 	opacity: 1;
 
 	transition: opacity 0.5s linear;
 }
 
-.icon.animated:hover::after,
-nav.you-bar:hover .icon.animated::after {
+.icon.animated:hover,
+nav.you-bar:hover .icon.animated {
+	opacity: 1;
+}
+
+.icon.animated.playing::after {
 	opacity: 0;
 
 	transition: opacity 0.2s ease-in-out;

@@ -15,7 +15,7 @@ export class CDNElement {
 		return this.hash.startsWith("a_");
 	};
 
-	getURL(format?: string, size?: number, quality?: "lossless" | "high" | "low", keep_aspect_ratio?: boolean, passthrough?: boolean, animated?: boolean): string {
+	getURL(format: string = "webp", size?: number, quality?: "lossless" | "high" | "low", keep_aspect_ratio?: boolean, passthrough?: boolean, animated?: boolean): string {
 		const searchParams = new URLSearchParams();
 		if (size !== undefined) searchParams.set("size", size.toString());
 		if (quality !== undefined) searchParams.set("quality", quality.toString());
