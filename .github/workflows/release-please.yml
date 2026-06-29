@@ -37,12 +37,58 @@ jobs:
         include:
           - platform: "macos-latest"
             args: "--target aarch64-apple-darwin"
+            bundle_path: "src-tauri/target/aarch64-apple-darwin/release/bundle"
+            rust_target: "aarch64-apple-darwin"
+            platform_short: "macOS"
+            arch_short: "arm64"
+
+          - platform: "macos-latest"
+            args: "--target x86_64-apple-darwin"
+            bundle_path: "src-tauri/target/x86_64-apple-darwin/release/bundle"
+            rust_target: "x86_64-apple-darwin"
+            platform_short: "macOS"
+            arch_short: "x64"
+
+          - platform: "macos-latest"
+            args: "--target universal-apple-darwin"
+            bundle_path: "src-tauri/target/universal-apple-darwin/release/bundle"
+            rust_target: "aarch64-apple-darwin,x86_64-apple-darwin"
+            platform_short: "macOS"
+            arch_short: "universal"
+
           - platform: "ubuntu-22.04"
             args: ""
+            bundle_path: "src-tauri/target/release/bundle"
+            rust_target: ""
+            platform_short: "linux"
+            arch_short: "amd64"
+
+          - platform: "ubuntu-22.04"
+            args: "--target aarch64-unknown-linux-gnu"
+            bundle_path: "src-tauri/target/aarch64-unknown-linux-gnu/release/bundle"
+            rust_target: "aarch64-unknown-linux-gnu"
+            platform_short: "linux"
+            arch_short: "aarch64"
+
           - platform: "windows-latest"
             args: ""
+            bundle_path: "src-tauri/target/release/bundle"
+            rust_target: ""
+            platform_short: "windows"
+            arch_short: "x64"
+
+          - platform: "windows-latest"
+            args: "--target aarch64-pc-windows-msvc"
+            bundle_path: "src-tauri/target/aarch64-pc-windows-msvc/release/bundle"
+            rust_target: "aarch64-pc-windows-msvc"
+            platform_short: "windows"
+            arch_short: "aarch64"
+
 
     runs-on: ${{ matrix.platform }}
+    env:
+      TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag_name || needs.release-please.outputs.tag_name }}
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -56,15 +102,16 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
         with:
-          targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin' || '' }}
+          targets: ${{ matrix.rust_target }}
 
       - name: Rust Cache
         uses: swatinem/rust-cache@v2
         with:
           workspaces: "./src-tauri -> target"
+          key: ${{ matrix.rust_target }}
 
-      - name: Install Linux system dependencies
-        if: matrix.platform == 'ubuntu-22.04'
+      - name: Install Linux system dependencies (x86_64)
+        if: matrix.platform == 'ubuntu-22.04' && matrix.rust_target == ''
         run: |
           sudo apt-get update
           sudo apt-get install -y \
@@ -79,6 +126,24 @@ jobs:
             libayatana-appindicator3-dev \
             librsvg2-dev
 
+      - name: Install Linux system dependencies (aarch64 cross)
+        if: matrix.rust_target == 'aarch64-unknown-linux-gnu'
+        run: |
+          sudo dpkg --add-architecture arm64
+          sudo sed -i 's/^deb /deb [arch=amd64,i386] /' /etc/apt/sources.list
+          printf '\ndeb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy main restricted universe multiverse\ndeb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy-updates main restricted universe multiverse\n' \
+            | sudo tee -a /etc/apt/sources.list
+          sudo apt-get update
+          sudo apt-get install -y \
+            gcc-aarch64-linux-gnu \
+            libgtk-3-dev:arm64 \
+            libwebkit2gtk-4.1-dev:arm64 \
+            libjavascriptcoregtk-4.1-dev:arm64 \
+            libsoup-3.0-dev:arm64 \
+            libssl-dev:arm64 \
+            libayatana-appindicator3-dev:arm64 \
+            librsvg2-dev:arm64
+
       - name: Install Node dependencies
         run: npm ci
 
@@ -89,11 +154,62 @@ jobs:
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PKG_CONFIG_ALLOW_CROSS: ${{ matrix.rust_target == 'aarch64-unknown-linux-gnu' && '1' || '' }}
+          PKG_CONFIG_PATH: ${{ matrix.rust_target == 'aarch64-unknown-linux-gnu' && '/usr/lib/aarch64-linux-gnu/pkgconfig' || '' }}
+          CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER: ${{ matrix.rust_target == 'aarch64-unknown-linux-gnu' && 'aarch64-linux-gnu-gcc' || '' }}
         with:
-          tagName: ${{ github.event_name == 'workflow_dispatch' && inputs.tag_name || needs.release-please.outputs.tag_name }}
-          releaseDraft: true
-          prerelease: ${{ startsWith(github.event_name == 'workflow_dispatch' && inputs.tag_name || needs.release-please.outputs.tag_name, 'v0.') || contains(github.event_name == 'workflow_dispatch' && inputs.tag_name || needs.release-please.outputs.tag_name, '-') }}
           args: ${{ matrix.args }}
+
+      - name: Upload artifacts (macOS)
+        if: matrix.platform == 'macos-latest'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="${TAG#v}"
+          PREFIX="Mercury.$VERSION.${{ matrix.platform_short }}.${{ matrix.arch_short }}"
+          BUNDLE="${{ matrix.bundle_path }}"
+          for f in "$BUNDLE/dmg/"*.dmg; do
+            [ -f "$f" ] && gh release upload "$TAG" "$f=$PREFIX.dmg" --clobber
+          done
+          for f in "$BUNDLE/macos/"*.app.tar.gz; do
+            [ -f "$f" ] && gh release upload "$TAG" "$f=$PREFIX.app.tar.gz" --clobber
+          done
+
+      - name: Upload artifacts (Linux)
+        if: matrix.platform == 'ubuntu-22.04'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="${TAG#v}"
+          PREFIX="Mercury.$VERSION.${{ matrix.platform_short }}.${{ matrix.arch_short }}"
+          BUNDLE="${{ matrix.bundle_path }}"
+          for f in "$BUNDLE/deb/"*.deb; do
+            [ -f "$f" ] && gh release upload "$TAG" "$f=$PREFIX.deb" --clobber
+          done
+          for f in "$BUNDLE/rpm/"*.rpm; do
+            [ -f "$f" ] && gh release upload "$TAG" "$f=$PREFIX.rpm" --clobber
+          done
+          for f in "$BUNDLE/appimage/"*.AppImage; do
+            [ -f "$f" ] && gh release upload "$TAG" "$f=$PREFIX.AppImage" --clobber
+          done
+
+      - name: Upload artifacts (Windows)
+        if: matrix.platform == 'windows-latest'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $VERSION = $env:TAG.TrimStart("v")
+          $PREFIX = "Mercury.$VERSION.${{ matrix.platform_short }}.${{ matrix.arch_short }}"
+          $BUNDLE = "${{ matrix.bundle_path }}"
+          Get-ChildItem "$BUNDLE/msi/*.msi" -ErrorAction SilentlyContinue | ForEach-Object {
+            gh release upload $env:TAG "$($_.FullName)=$PREFIX.msi" --clobber
+          }
+          Get-ChildItem "$BUNDLE/nsis/*-setup.exe" -ErrorAction SilentlyContinue | ForEach-Object {
+            gh release upload $env:TAG "$($_.FullName)=$PREFIX.setup.exe" --clobber
+          }
 
   publish-release:
     needs: [release-please, build-tauri]
