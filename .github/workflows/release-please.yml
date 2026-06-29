@@ -85,7 +85,6 @@ jobs:
             platform_short: "windows"
             arch_short: "aarch64"
 
-
     runs-on: ${{ matrix.platform }}
     env:
       TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag_name || needs.release-please.outputs.tag_name }}
@@ -149,7 +148,7 @@ jobs:
         run: npm ci
 
       - name: Generate icons
-        run: npm run tauri icon src-tauri/icons/icon.svg
+        run: npm run tauri icon src-tauri/icons/icon.png
 
       - name: Build frontend & app
         uses: tauri-apps/tauri-action@v0
