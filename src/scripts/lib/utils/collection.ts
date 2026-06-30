@@ -32,6 +32,10 @@ export class Collection<T> {
 		throw new Error(`Cannot fetch element "${key}": method not implemented.`);
 	};
 
+	cached() {
+		return this.cache;
+	};
+
 	set(key: string, value: T): void {
 		this.cache.set(key, value);
 	};
