@@ -6,10 +6,9 @@ nav.sidebar {
 	width: 4rem;
 	height: calc(100% - 3rem);
 
-	scrollbar-width: none;
-
 	overflow-x: clip;
 	overflow-y: scroll;
+	scrollbar-width: none;
 
 	padding-bottom: 4rem;
 
