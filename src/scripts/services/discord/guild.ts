@@ -1,9 +1,10 @@
 import { Color, Collection, Loaded } from "/scripts/lib/utils.ts";
 
 import { CDNElement } from "/scripts/services/discord/cdn.ts";
-import { Emoji, EmojiCollection } from "/scripts/services/discord/emoji.ts";
-import { Role, RoleCollection } from "/scripts/services/discord/role.ts";
-import { Sticker, StickerCollection } from "/scripts/services/discord/sticker.ts";
+import { Channel, ChannelCollection } from "/scripts/services/discord/channel.ts";
+import { EmojiCollection } from "/scripts/services/discord/emoji.ts";
+import { RoleCollection } from "/scripts/services/discord/role.ts";
+import { StickerCollection } from "/scripts/services/discord/sticker.ts";
 import type { Snowflake } from "/scripts/services/discord/snowflake.ts";
 
 import { discordClient } from "/main.ts";
@@ -251,6 +252,8 @@ export class Guild<Ready extends boolean = true> {
 	official_message_color?: Loaded<Color, Ready>;
 	version?: Loaded<string, Ready>;
 
+	channels = new ChannelCollection();
+
 	constructor(data: any) {
 		Object.assign(this, data);
 
@@ -276,6 +279,20 @@ export class Guild<Ready extends boolean = true> {
 			badge: new CDNElement(`/guild-tag-badges/${data.id}`, data.profile.badge)
 		};
 		if (data.official_message_color !== undefined && data.official_message_color !== null) this.official_message_color = new Color(data.official_message_color);
+	};
+
+	async listChannels(): Promise<Channel[]> {
+		const response = await discordClient.rest.request(`/guilds/${this.id}/channels`);
+		const channels = await response.json();
+		const list = [];
+
+		for (const data of channels) {
+			const channel = new Channel(data);
+			this.channels.set(channel.id, channel);
+			list.push(channel);
+		}
+
+		return list.sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
 	};
 };
 
