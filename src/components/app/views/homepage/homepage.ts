@@ -1,12 +1,13 @@
 import { getIcon } from "/scripts/lib/icon.ts";
 
-export const title = "Welcome to Mercury";
-
-export const render = async (container: HTMLElement) => {
+export const render = async (container: HTMLElement, _params: URLSearchParams) => {
 	const mercuryIcon = container.querySelector("#mercury-icon") as HTMLElement;
 	mercuryIcon.innerHTML = await getIcon("mercury");
 
-	return () => {
+	return {
+		cleanup: () => {
 
+		},
+		title: "Welcome to Mercury"
 	};
 };

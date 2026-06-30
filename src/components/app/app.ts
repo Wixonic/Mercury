@@ -124,6 +124,10 @@ const ready = async () => {
 			}
 
 			guildElement.append(icon);
+
+			guildElement.addEventListener("click", async () => {
+				await view(`/views/guild/guild.html?guildId=${guildId}`);
+			});
 		} else {
 			const questionIcon = await getIcon("question-circle");
 			guildElement.innerHTML = questionIcon;
