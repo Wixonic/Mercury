@@ -292,7 +292,11 @@ export class Guild<Ready extends boolean = true> {
 			list.push(channel);
 		}
 
-		return list.sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
+		return list.sort((a, b) => {
+			if (a.category === b.category) {
+				return (a.position ?? 0) - (b.position ?? 0);
+			} else return a.category - b.category;
+		});
 	};
 };
 

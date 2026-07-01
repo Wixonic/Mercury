@@ -25,6 +25,12 @@ export enum ChannelType {
 	EphemeralDM = 18
 };
 
+export enum ChannelCategory {
+	Text = 0,
+	Voice = 1,
+	DM = 2
+};
+
 export enum ChannelPermissionOverwriteType {
 	Role = 0,
 	Member = 1
@@ -252,6 +258,23 @@ export class Channel<Ready extends boolean = true> {
 			...data.linked_lobby,
 			linked_at: new Date(data.linked_lobby.linked_at)
 		};
+	};
+
+	get category(): ChannelCategory {
+		const dmChannels = [
+			ChannelType.DM,
+			ChannelType.GroupDM,
+			ChannelType.EphemeralDM
+		];
+
+		const voiceChannels = [
+			ChannelType.GuildVoice,
+			ChannelType.GuildStageVoice
+		];
+
+		if (dmChannels.includes(this.type)) return ChannelCategory.DM;
+		else if (voiceChannels.includes(this.type)) return ChannelCategory.Voice;
+		else return ChannelCategory.Text;
 	};
 };
 
