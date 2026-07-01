@@ -87,7 +87,7 @@ body {
 	display: none !important;
 }
 
-.loadable * {
+.loadable>* {
 	--loadable-transition: opacity 0.3s ease-in-out, filter 0.1s ease-in-out;
 	transition: var(--loadable-transition);
 }
@@ -98,7 +98,7 @@ body {
 	pointer-events: none;
 }
 
-.loadable.loading * {
+.loadable.loading>* {
 	opacity: 0.3;
 
 	filter: blur(1rem);
