@@ -23,6 +23,17 @@ const changeState = (state?: string, color: string = "text", force: boolean = fa
 let currentLoadToken: object | null = null;
 
 const ready = async () => {
+	changeState("Loading icons", "warning");
+
+	const [settingsIcon, warningIcon, directMessagesIcon, favoritesIcon, createGuildIcon, exploreGuildsIcon] = await Promise.all([
+		getIcon("gear"),
+		getIcon("warning-circle"),
+		getIcon("chats"),
+		getIcon("star"),
+		getIcon("plus-circle"),
+		getIcon("compass")
+	]);
+
 	const loadToken = {};
 	currentLoadToken = loadToken;
 
@@ -78,7 +89,6 @@ const ready = async () => {
 		} else nameplate.classList.add("hidden");
 
 		const settingsButton = youBar.querySelector("button#settings")!;
-		const settingsIcon = await getIcon("gear-six");
 		settingsButton.innerHTML = settingsIcon;
 
 		youBar.addEventListener("mouseenter", () => {
@@ -128,10 +138,7 @@ const ready = async () => {
 			guildElement.addEventListener("click", async () => {
 				await view(`/views/guild/guild.html?guildId=${guildId}`);
 			});
-		} else {
-			const questionIcon = await getIcon("question-circle");
-			guildElement.innerHTML = questionIcon;
-		}
+		} else guildElement.innerHTML = warningIcon;
 
 		guildElement.setAttribute("tooltip", guild ? guild.name : "Guild is unreachable");
 		return guildElement;
@@ -141,13 +148,6 @@ const ready = async () => {
 	const favoritesElement = sidebar.querySelector("button#favorites")!;
 	const createGuildElement = sidebar.querySelector("button#create-guild")!;
 	const exploreGuildsElement = sidebar.querySelector("button#explore-guilds")!;
-
-	const [directMessagesIcon, favoritesIcon, createGuildIcon, exploreGuildsIcon] = await Promise.all([
-		getIcon("chats-circle"),
-		getIcon("star"),
-		getIcon("plus-circle"),
-		getIcon("compass")
-	]);
 
 	directMessagesElement.innerHTML = directMessagesIcon;
 	favoritesElement.innerHTML = favoritesIcon;
