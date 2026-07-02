@@ -11,9 +11,7 @@ export const render = async (container: HTMLElement, params: URLSearchParams) =>
 		container.innerHTML = "Failed to load guild.";
 
 		return {
-			cleanup: () => {
-
-			},
+			cleanup: () => { },
 			title: "Unknown Guild"
 		};
 	} else {
@@ -119,9 +117,7 @@ export const render = async (container: HTMLElement, params: URLSearchParams) =>
 		channelsContainer.classList.remove("loading");
 
 		return {
-			cleanup: () => {
-
-			},
+			cleanup: () => { },
 			title: guild.name
 		};
 	}

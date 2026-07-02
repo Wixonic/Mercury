@@ -281,7 +281,15 @@ export class Guild<Ready extends boolean = true> {
 		if (data.official_message_color !== undefined && data.official_message_color !== null) this.official_message_color = new Color(data.official_message_color);
 	};
 
-	async listChannels(): Promise<Channel[]> {
+	async listChannels(force = false): Promise<Channel[]> {
+		if (!force && this.channels.cached().size > 0) {
+			return Array.from(this.channels.cached().values()).sort((a, b) => {
+				if (a.category === b.category) {
+					return (a.position ?? 0) - (b.position ?? 0);
+				} else return a.category - b.category;
+			});
+		}
+
 		const response = await discordClient.rest.request(`/guilds/${this.id}/channels`);
 		const channels = await response.json();
 		const list = [];

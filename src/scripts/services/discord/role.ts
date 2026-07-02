@@ -1,12 +1,21 @@
 import { Collection } from "/scripts/lib/utils.ts";
 
-import { CDNElement } from "/scripts/services/discord/cdn.ts";
-import type { Snowflake } from "/scripts/services/discord/snowflake.ts";
+export class Role {
+	id!: string;
+	name!: string;
+	color!: number;
 
-export class Role<T extends boolean = true> extends CDNElement {
-
+	constructor(data: any) {
+		Object.assign(this, data);
+	};
 };
 
-export class RoleCollection extends Collection<Role | Role<false>> {
+export class RoleCollection extends Collection<Role> {
+	constructor(roles?: any[]) {
+		super();
 
+		if (roles) {
+			for (const data of roles) this.set(data.id, new Role(data));
+		}
+	};
 };

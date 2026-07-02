@@ -1,6 +1,7 @@
 import { Collection, Loaded } from "/scripts/lib/utils.ts";
 
 import { CDNElement } from "/scripts/services/discord/cdn.ts";
+import { GatewayDispatchEvent, GatewayOpCode } from "/scripts/services/discord/client.ts";
 import type { Snowflake } from "/scripts/services/discord/snowflake.ts";
 import type { User } from "/scripts/services/discord/user.ts";
 

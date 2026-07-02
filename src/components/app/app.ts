@@ -5,11 +5,11 @@ import JSONPackage from "/../package.json" with { type: "json" };
 import { getIcon } from "/scripts/lib/icon.ts";
 
 import { Guild } from "/scripts/services/discord/guild.ts";
+import { Snowflake } from "/scripts/services/discord/snowflake.ts";
 
 import { animateIcon, AnimatedIconElement } from "/components/app/lib/animated-icon.ts";
 import { view } from "/components/app/lib/view.ts";
 
-import { discordClient } from "/main.ts";
 import { Snowflake } from "/scripts/services/discord/snowflake";
 
 let currentState: string | undefined;
@@ -44,7 +44,7 @@ const ready = async () => {
 	await view("/views/homepage/homepage.html");
 	if (currentLoadToken !== loadToken) return;
 
-	changeState("Fetching data", "warning");
+	changeState("Fetching user", "warning");
 
 	const [settings, self] = await Promise.all([
 		discordClient.fetchSettings(),
@@ -122,9 +122,8 @@ const ready = async () => {
 		let guild: Guild<true> | Guild<false> | null = null;
 		try {
 			guild = await discordClient.guilds.get(guildId) ?? null;
-			console.log(guild);
 		} catch (error) {
-			console.error(error);
+			console.error("Error fetching guild:", error);
 		}
 
 		if (guild) {

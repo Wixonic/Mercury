@@ -201,6 +201,172 @@ export enum ClientSettingsSlayerSdkReceiveInGameDms {
 	None = 3
 };
 
+
+
+export enum GatewayOpCode {
+	Dispatch = 0,
+	Heartbeat = 1,
+	Identify = 2,
+	PresenceUpdate = 3,
+	VoiceStateUpdate = 4,
+	VoiceServerPing = 5,
+	Resume = 6,
+	Reconnect = 7,
+	RequestGuildMembers = 8,
+	InvalidSession = 9,
+	Hello = 10,
+	HeartbeatACK = 11,
+	CallConnect = 13,
+	LobbyVoiceStates = 17,
+	StreamCreate = 18,
+	StreamDelete = 19,
+	StreamWatch = 20,
+	StreamPing = 21,
+	StreamSetPaused = 22,
+	RequestForumUnreads = 28,
+	RemoteCommand = 29,
+	RequestDeletedEntityIDs = 30,
+	RequestSoundboardSounds = 31,
+	RequestLastMessages = 34,
+	SearchRecentMembers = 35,
+	GuildSubscriptionsBulk = 37,
+	GuildChannelsResync = 38,
+	RequestChannelMemberCount = 39,
+	QoSHeartbeat = 40,
+	UpdateTimeSpentSessionID = 41,
+	LobbyVoiceServerPing = 42,
+	RequestChannelInfo = 43
+};
+
+export enum GatewayDispatchEvent {
+	Ready = "READY",
+	ReadySupplemental = "READY_SUPPLEMENTAL",
+	Resumed = "RESUMED",
+	SessionsReplace = "SESSIONS_REPLACE",
+	UserSettingsProtoUpdate = "USER_SETTINGS_PROTO_UPDATE",
+	UserSettingsUpdate = "USER_SETTINGS_UPDATE",
+	ApplicationCommandPermissionsUpdate = "APPLICATION_COMMAND_PERMISSIONS_UPDATE",
+	AutoModerationRuleCreate = "AUTO_MODERATION_RULE_CREATE",
+	AutoModerationRuleUpdate = "AUTO_MODERATION_RULE_UPDATE",
+	AutoModerationRuleDelete = "AUTO_MODERATION_RULE_DELETE",
+	AutoModerationActionExecution = "AUTO_MODERATION_ACTION_EXECUTION",
+	ChannelCreate = "CHANNEL_CREATE",
+	ChannelUpdate = "CHANNEL_UPDATE",
+	ChannelDelete = "CHANNEL_DELETE",
+	ChannelPinsUpdate = "CHANNEL_PINS_UPDATE",
+	ThreadCreate = "THREAD_CREATE",
+	ThreadUpdate = "THREAD_UPDATE",
+	ThreadDelete = "THREAD_DELETE",
+	ThreadListSync = "THREAD_LIST_SYNC",
+	ThreadMemberUpdate = "THREAD_MEMBER_UPDATE",
+	ThreadMembersUpdate = "THREAD_MEMBERS_UPDATE",
+	GuildCreate = "GUILD_CREATE",
+	GuildUpdate = "GUILD_UPDATE",
+	GuildDelete = "GUILD_DELETE",
+	GuildBanAdd = "GUILD_BAN_ADD",
+	GuildBanRemove = "GUILD_BAN_REMOVE",
+	GuildEmojisUpdate = "GUILD_EMOJIS_UPDATE",
+	GuildStickersUpdate = "GUILD_STICKERS_UPDATE",
+	GuildIntegrationsUpdate = "GUILD_INTEGRATIONS_UPDATE",
+	GuildMemberAdd = "GUILD_MEMBER_ADD",
+	GuildMemberUpdate = "GUILD_MEMBER_UPDATE",
+	GuildMemberRemove = "GUILD_MEMBER_REMOVE",
+	GuildMembersChunk = "GUILD_MEMBERS_CHUNK",
+	GuildRoleCreate = "GUILD_ROLE_CREATE",
+	GuildRoleUpdate = "GUILD_ROLE_UPDATE",
+	GuildRoleDelete = "GUILD_ROLE_DELETE",
+	GuildScheduledEventCreate = "GUILD_SCHEDULED_EVENT_CREATE",
+	GuildScheduledEventUpdate = "GUILD_SCHEDULED_EVENT_UPDATE",
+	GuildScheduledEventDelete = "GUILD_SCHEDULED_EVENT_DELETE",
+	GuildScheduledEventUserAdd = "GUILD_SCHEDULED_EVENT_USER_ADD",
+	GuildScheduledEventUserRemove = "GUILD_SCHEDULED_EVENT_USER_REMOVE",
+	GuildAuditLogEntryCreate = "GUILD_AUDIT_LOG_ENTRY_CREATE",
+	IntegrationCreate = "INTEGRATION_CREATE",
+	IntegrationUpdate = "INTEGRATION_UPDATE",
+	IntegrationDelete = "INTEGRATION_DELETE",
+	InviteCreate = "INVITE_CREATE",
+	InviteDelete = "INVITE_DELETE",
+	MessageCreate = "MESSAGE_CREATE",
+	MessageUpdate = "MESSAGE_UPDATE",
+	MessageDelete = "MESSAGE_DELETE",
+	MessageDeleteBulk = "MESSAGE_DELETE_BULK",
+	MessageReactionAdd = "MESSAGE_REACTION_ADD",
+	MessageReactionRemove = "MESSAGE_REACTION_REMOVE",
+	MessageReactionRemoveAll = "MESSAGE_REACTION_REMOVE_ALL",
+	MessageReactionRemoveEmoji = "MESSAGE_REACTION_REMOVE_EMOJI",
+	PresenceUpdate = "PRESENCE_UPDATE",
+	StageInstanceCreate = "STAGE_INSTANCE_CREATE",
+	StageInstanceUpdate = "STAGE_INSTANCE_UPDATE",
+	StageInstanceDelete = "STAGE_INSTANCE_DELETE",
+	TypingStart = "TYPING_START",
+	UserUpdate = "USER_UPDATE",
+	VoiceStateUpdate = "VOICE_STATE_UPDATE",
+	VoiceServerUpdate = "VOICE_SERVER_UPDATE",
+	WebhooksUpdate = "WEBHOOKS_UPDATE",
+	InteractionCreate = "INTERACTION_CREATE",
+	EntitlementCreate = "ENTITLEMENT_CREATE",
+	EntitlementUpdate = "ENTITLEMENT_UPDATE",
+	EntitlementDelete = "ENTITLEMENT_DELETE",
+	GuildMemberListUpdate = "GUILD_MEMBER_LIST_UPDATE",
+	CallCreate = "CALL_CREATE",
+	CallUpdate = "CALL_UPDATE",
+	CallDelete = "CALL_DELETE",
+	ChannelRecipientAdd = "CHANNEL_RECIPIENT_ADD",
+	ChannelRecipientRemove = "CHANNEL_RECIPIENT_REMOVE",
+	FriendSuggestionCreate = "FRIEND_SUGGESTION_CREATE",
+	FriendSuggestionDelete = "FRIEND_SUGGESTION_DELETE",
+	UserConnectionsUpdate = "USER_CONNECTIONS_UPDATE",
+	UserNoteUpdate = "USER_NOTE_UPDATE",
+	UserRequiredActionUpdate = "USER_REQUIRED_ACTION_UPDATE",
+	RelationshipAdd = "RELATIONSHIP_ADD",
+	RelationshipRemove = "RELATIONSHIP_REMOVE",
+	PresenceReplace = "PRESENCE_REPLACE",
+	GuildJoinRequestCreate = "GUILD_JOIN_REQUEST_CREATE",
+	GuildJoinRequestUpdate = "GUILD_JOIN_REQUEST_UPDATE",
+	GuildJoinRequestDelete = "GUILD_JOIN_REQUEST_DELETE",
+	RecentMentionDelete = "RECENT_MENTION_DELETE"
+};
+
+export enum GatewayCloseCode {
+	UnknownError = 4000,
+	UnknownOpcode = 4001,
+	DecodeError = 4002,
+	NotAuthenticated = 4003,
+	AuthenticationFailed = 4004,
+	AlreadyAuthenticated = 4005,
+	InvalidSeq = 4007,
+	RateLimited = 4008,
+	SessionTimeout = 4009,
+	InvalidShard = 4010,
+	ShardingRequired = 4011,
+	InvalidApiVersion = 4012,
+	InvalidIntents = 4013,
+	DisallowedIntents = 4014
+};
+
+const GatewayIntents = {
+	LazyUserNotes: 1n << 0n,
+	NoAffineUserIds: 1n << 1n,
+	VersionedReadStates: 1n << 2n,
+	VersionedUserGuildSettings: 1n << 3n,
+	DedupeUserObjects: 1n << 4n,
+	PrioritizedReadyPayload: 1n << 5n,
+	MultipleGuildExperimentPopulations: 1n << 6n,
+	NonChannelReadStates: 1n << 7n,
+	AuthTokenRefresh: 1n << 8n,
+	UserSettingsProto: 1n << 9n,
+	ClientStateV2: 1n << 10n,
+	PassiveGuildUpdate: 1n << 11n,
+	AutoCallConnect: 1n << 12n,
+	DebounceMessageReactions: 1n << 13n,
+	PassiveGuildUpdateV2: 1n << 14n,
+	ChannelObfuscation: 1n << 15n,
+	AutoLobbyConnect: 1n << 16n
+} as const;
+export type GatewayIntents = typeof GatewayIntents[keyof typeof GatewayIntents];
+
+
+
 export class DiscordClient extends Client {
 	rest: RestClient;
 	ws?: WebSocket;
@@ -252,12 +418,16 @@ export class DiscordClient extends Client {
 			try {
 				const userResponse = await this.rest.request("/users/@me");
 				if (generation !== this.connectionGeneration) return;
+
 				const userData = await userResponse.json();
 				if (generation !== this.connectionGeneration) return;
+
 				store.setState({ currentUser: userData });
 			} catch (error: any) {
 				console.error("Token verification failed:", error);
+
 				if (generation !== this.connectionGeneration) return;
+
 				if (error.message && (error.message.includes("401") || error.message.includes("403"))) {
 					this.resetAndRedirectToLogin();
 					return;
@@ -268,10 +438,12 @@ export class DiscordClient extends Client {
 			if (!gatewayURL) {
 				const gatewayResponse = await this.rest.request("/gateway");
 				if (generation !== this.connectionGeneration) return;
+
 				const gatewayData = await gatewayResponse.json();
 				if (generation !== this.connectionGeneration) return;
-				console.log("Gateway response data:", gatewayData);
+
 				gatewayURL = gatewayData.url;
+				console.log("Gateway response data:", gatewayData);
 			} else console.log("Using cached resume gateway URL:", gatewayURL);
 
 			try {
@@ -281,22 +453,27 @@ export class DiscordClient extends Client {
 						"User-Agent": fake.browser_user_agent
 					}
 				});
+
 				if (generation !== this.connectionGeneration) {
-					ws.disconnect().catch(console.error);
+					ws.disconnect().catch((error) => console.error("Failed to disconnect WebSocket:", error));
 					return;
 				}
+
 				this.ws = ws;
+
 				const listenerGeneration = generation;
 				this.unlistenGateway = this.ws.addListener((message) => {
 					if (listenerGeneration !== this.connectionGeneration) return;
 					this.gateway(message);
 				});
+
 				this.startHelloWatchdog();
 			} catch (error) {
 				console.error("Failed to initialize Discord client:", error);
 			}
 		} catch (error: any) {
 			console.error("Failed to get Discord Gateway URL:", error);
+
 			if (generation !== this.connectionGeneration) return;
 			if (error.message && (error.message.includes("401") || error.message.includes("403"))) this.resetAndRedirectToLogin();
 		}
@@ -308,7 +485,7 @@ export class DiscordClient extends Client {
 		return self;
 	};
 
-	private resetAndRedirectToLogin() {
+	private async resetAndRedirectToLogin() {
 		this.token = undefined;
 		this.sessionId = undefined;
 		this.sequence = undefined;
@@ -324,7 +501,7 @@ export class DiscordClient extends Client {
 			route: "login"
 		});
 
-		this.disconnect(false);
+		await this.disconnect(false).catch((error) => console.error("Failed to disconnect WebSocket:", error));
 	};
 
 	private async reconnect() {
@@ -346,27 +523,34 @@ export class DiscordClient extends Client {
 					"User-Agent": fake.browser_user_agent
 				}
 			});
+
 			if (generation !== this.connectionGeneration) {
-				ws.disconnect().catch(console.error);
+				await ws.disconnect().catch((error) => console.error("Failed to disconnect WebSocket:", error));
 				this.isReconnecting = false;
 				return;
 			}
+
 			this.ws = ws;
+
 			const listenerGeneration = generation;
 			this.unlistenGateway = this.ws.addListener((message) => {
 				if (listenerGeneration !== this.connectionGeneration) return;
 				this.gateway(message);
 			});
+
 			this.isReconnecting = false;
 			this.startHelloWatchdog();
 		} catch (error: any) {
 			console.error("Failed to reconnect:", error);
+
 			this.isReconnecting = false;
 			if (generation !== this.connectionGeneration) return;
+
 			if (error.message && (error.message.includes("401") || error.message.includes("403"))) {
 				this.resetAndRedirectToLogin();
 				return;
 			}
+
 			this.dispatchEvent(new CustomEvent("disconnected", { detail: error }));
 			if (!this.isUnloading) this.reconnect();
 		}
@@ -392,6 +576,7 @@ export class DiscordClient extends Client {
 		if (this.ws) {
 			const wsToDisconnect = this.ws;
 			this.ws = undefined;
+
 			try {
 				await Promise.race([
 					wsToDisconnect.disconnect(),
@@ -437,14 +622,16 @@ export class DiscordClient extends Client {
 	async gateway(rawMessage: WebSocketMessage) {
 		if (rawMessage.type === "Close") {
 			console.error("WebSocket connection closed:", rawMessage.data);
+
 			const closeFrame = rawMessage.data;
-			if (closeFrame && (closeFrame.code === 4004 || closeFrame.code === 4014)) {
+			if (closeFrame && (closeFrame.code === GatewayCloseCode.AuthenticationFailed || closeFrame.code === GatewayCloseCode.DisallowedIntents)) {
 				console.error(`Authentication failed (Close code: ${closeFrame.code}). Redirecting to login.`);
 				this.resetAndRedirectToLogin();
 				return;
 			}
+
 			this.ws = undefined;
-			this.disconnect(true);
+			await this.disconnect(true).catch((error) => console.error("Failed to disconnect WebSocket:", error));
 			return;
 		}
 
@@ -452,12 +639,14 @@ export class DiscordClient extends Client {
 		if (!message) return;
 
 		switch (message.code) {
-			case 0: // Dispatch
+			case GatewayOpCode.Dispatch:
 				this.sequence = message.sequence;
 				if (this.sequence) sessionStorage.setItem("discord_sequence", this.sequence.toString());
 
+				if (message.event) this.dispatchEvent(new CustomEvent(message.event, { detail: message.data }));
+
 				switch (message.event) {
-					case "READY":
+					case GatewayDispatchEvent.Ready:
 						this.sessionId = message.data.session_id;
 						this.resumeGatewayURL = message.data.resume_gateway_url;
 
@@ -473,7 +662,7 @@ export class DiscordClient extends Client {
 						this.dispatchEvent(new CustomEvent("ready"));
 						break;
 
-					case "SESSIONS_REPLACE":
+					case GatewayDispatchEvent.SessionsReplace:
 						const sessions: Session[] = message.data;
 						const currentSession = sessions.find((session) => session.session_id === this.sessionId) ?? sessions.find((session) => session.active);
 
@@ -489,7 +678,7 @@ export class DiscordClient extends Client {
 						}));
 						break;
 
-					case "RESUMED":
+					case GatewayDispatchEvent.Resumed:
 						console.info("Resumed");
 						this.dispatchEvent(new CustomEvent("resumed"));
 						break;
@@ -500,13 +689,14 @@ export class DiscordClient extends Client {
 				}
 				break;
 
-			case 7: // Reconnect
+			case GatewayOpCode.Reconnect:
 				console.warn("Reconnect requested by server");
-				this.disconnect();
+				await this.disconnect().catch((error) => console.error("Failed to disconnect WebSocket:", error));
 				break;
 
-			case 9: // Invalid Session
+			case GatewayOpCode.InvalidSession:
 				console.warn("Invalid Session");
+
 				if (message.data !== true) {
 					this.sessionId = undefined;
 					this.sequence = undefined;
@@ -515,14 +705,16 @@ export class DiscordClient extends Client {
 					sessionStorage.removeItem("discord_sequence");
 					sessionStorage.removeItem("discord_resume_gateway_url");
 				}
-				this.disconnect(true);
+
+				await this.disconnect(true).catch((error) => console.error("Failed to disconnect WebSocket:", error));
 				break;
 
-			case 10: // Hello
+			case GatewayOpCode.Hello:
 				if (this.helloWatchdog) {
 					clearTimeout(this.helloWatchdog);
 					this.helloWatchdog = undefined;
 				}
+
 				this.sendHeartbeat();
 				this.heartbeat = setInterval(() => this.sendHeartbeat(), message.data.heartbeat_interval);
 
@@ -530,7 +722,7 @@ export class DiscordClient extends Client {
 				else if (this.token) this.sendIdentify();
 				break;
 
-			case 11: // Heartbeat ACK
+			case GatewayOpCode.HeartbeatACK:
 				if (this.heartbeatTimestamp) this.ping = performance.now() - this.heartbeatTimestamp;
 				this.heartbeatTimestamp = undefined;
 				this.dispatchEvent(new CustomEvent("heartbeat", { detail: this.ping }));
@@ -562,6 +754,30 @@ export class DiscordClient extends Client {
 		return this.settings!;
 	};
 
+	awaitEvent<Type = any>(eventName: string, check?: (data: Type) => boolean, timeout = 5000): Promise<Type> {
+		return new Promise((resolve, reject) => {
+			const timer = setTimeout(() => {
+				cleanup();
+				reject(new Error(`Timeout waiting for event ${eventName}`));
+			}, timeout);
+
+			const handler = (event: Event) => {
+				const data = (event as CustomEvent).detail;
+				if (!check || check(data)) {
+					cleanup();
+					resolve(data);
+				}
+			};
+
+			const cleanup = () => {
+				clearTimeout(timer);
+				this.removeEventListener(eventName, handler);
+			};
+
+			this.addEventListener(eventName, handler);
+		});
+	};
+
 	async send(data: any) {
 		if (!this.ws) {
 			console.error("WebSocket is not initialized.");
@@ -579,13 +795,13 @@ export class DiscordClient extends Client {
 	private async sendHeartbeat() {
 		if (this.heartbeatTimestamp) {
 			console.warn("Heartbeat timeout. Reconnecting...");
-			this.disconnect();
+			await this.disconnect().catch((error) => console.error("Failed to disconnect WebSocket:", error));
 			return;
 		}
 
 		this.heartbeatTimestamp = performance.now();
 		this.send({
-			op: 1, // Heartbeat
+			op: GatewayOpCode.Heartbeat,
 			d: this.sequence ?? null
 		});
 	};
@@ -598,7 +814,7 @@ export class DiscordClient extends Client {
 
 		sessionStorage.setItem("discord_last_identify", Date.now().toString());
 		this.send({
-			op: 2,
+			op: GatewayOpCode.Identify,
 			d: {
 				token: this.token,
 				properties: {
@@ -615,14 +831,14 @@ export class DiscordClient extends Client {
 					release_channel: "stable"
 				},
 				compress: false,
-				intents: 513
+				intents: GatewayIntents.UserSettingsProto
 			}
 		});
 	};
 
 	private async sendResume() {
 		this.send({
-			op: 6,
+			op: GatewayOpCode.Resume,
 			d: {
 				token: this.token,
 				session_id: this.sessionId,
