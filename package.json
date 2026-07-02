@@ -7,8 +7,8 @@
 	"license": "Wixonic Non-Commercial License",
 	"repository": "github:Wixonic/Mercury",
 	"scripts": {
-		"dev": "node build.mjs --serve",
-		"build": "node build.mjs",
+		"dev": "tsc --noEmit && node build.mjs --serve",
+		"build": "tsc --noEmit && node build.mjs",
 		"tauri": "tauri",
 		"icon:compile": "actool src-tauri/icons/icon.icon --compile src-tauri/icons --app-icon icon --target-device mac --platform macosx --minimum-deployment-target 26.0 --output-partial-info-plist src-tauri/icons/partial.plist"
 	},
