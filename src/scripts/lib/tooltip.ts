@@ -3,6 +3,8 @@ type TooltipOrientation = "right" | "left" | "top" | "bottom";
 let tooltipEl: HTMLElement | null = null;
 let currentTarget: Element | null = null;
 let rafId: number | null = null;
+let mouseX: number | null = null;
+let mouseY: number | null = null;
 
 const getTooltip = (): HTMLElement => {
 	if (!tooltipEl) {
@@ -76,6 +78,32 @@ const stopTracking = (): void => {
 	}
 };
 
+const updateTooltipAtMouse = (): void => {
+	if (mouseX === null || mouseY === null) return;
+	const element = document.elementFromPoint(mouseX, mouseY);
+	const target = findTooltipTarget(element);
+	const tooltip = getTooltip();
+
+	if (target) {
+		if (target !== currentTarget) {
+			currentTarget = target;
+			tooltip.textContent = target.getAttribute("tooltip") || "";
+			stopTracking();
+			trackPosition();
+		}
+		tooltip.style.opacity = "1";
+	} else {
+		currentTarget = null;
+		stopTracking();
+		tooltip.style.opacity = "0";
+	}
+};
+
+document.addEventListener("mousemove", (event) => {
+	mouseX = event.clientX;
+	mouseY = event.clientY;
+});
+
 document.addEventListener("mouseover", (event) => {
 	const target = findTooltipTarget(event.target as Element);
 	if (!target) return;
@@ -101,3 +129,7 @@ document.addEventListener("mouseout", (event) => {
 		getTooltip().style.opacity = "0";
 	}
 });
+
+window.addEventListener("scroll", () => {
+	updateTooltipAtMouse();
+}, { capture: true, passive: true });

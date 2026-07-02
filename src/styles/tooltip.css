@@ -4,16 +4,17 @@
 	left: 0;
 
 	display: flex;
+	justify-content: center;
 	align-items: center;
 
 	height: 2rem;
 	width: fit-content;
 
 	background: hsla(var(--background), 50%);
-	backdrop-filter: blur(0.2rem);
+	backdrop-filter: blur(0.4rem);
 	box-shadow: 0 0 0.25rem hsla(var(--background), 80%), 0 0 0.75rem hsl(var(--background));
 
-	font-size: 0.9rem;
+	font-size: 0.8rem;
 	white-space: nowrap;
 
 	border: 1px solid hsla(var(--text), 10%);
