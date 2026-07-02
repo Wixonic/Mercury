@@ -1,3 +1,7 @@
+(BigInt.prototype as any).toJSON = function (this: bigint) {
+	return this >= BigInt(Number.MIN_SAFE_INTEGER) && this <= BigInt(Number.MAX_SAFE_INTEGER) ? Number(this) : this.toString();
+};
+
 import { store } from "/scripts/lib/store.ts";
 import { links } from "/scripts/lib/link.ts";
 import "/scripts/lib/tooltip.ts";
