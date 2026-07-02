@@ -1,5 +1,5 @@
 # Working on...
-- [ ] [Channels](https://docs.discord.food/resources/channel)
+- [/] [Channels](https://docs.discord.food/resources/channel)
 	- [ ] Typing Indicator
 	- [ ] Channel Settings
 	- [ ] Permissions
@@ -26,11 +26,11 @@
 	- [ ] Stickers
 	- [ ] Emojis
 	- [ ] Replies
-- [ ] [Users](https://docs.discord.food/resources/user)
-	- [ ] Settings
-	- [ ] Relationships
+- [/] [Users](https://docs.discord.food/resources/user)
+	- [/] Settings
+	- [/] Relationships
 	- [ ] Connections
-- [ ] [Guilds](https://docs.discord.food/resources/guild)
+- [/] [Guilds](https://docs.discord.food/resources/guild)
 	- [ ] Roles
 	- [ ] Settings
 	- [ ] Bans
