@@ -1,5 +1,7 @@
 import html from "./app.html";
 
+import JSONPackage from "/../package.json" with { type: "json" };
+
 import { getIcon } from "/scripts/lib/icon.ts";
 
 import { Guild } from "/scripts/services/discord/guild.ts";
@@ -190,10 +192,15 @@ const ready = async () => {
 	await discordClient.send({
 		"op": 3,
 		"d": {
-			"since": null,
-			"activities": [],
-			"status": "online",
-			"afk": false
+			status: "idle",
+			since: null,
+			activities: [{
+				name: `Mercury v${JSONPackage.version}`,
+				details: "A lightweight, fast, privacy-first, and powerful Discord client.",
+				details_url: "https://github.com/Wixonic/Mercury",
+				type: 0
+			}],
+			afk: false
 		}
 	});
 
