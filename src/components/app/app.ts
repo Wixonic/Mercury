@@ -10,7 +10,7 @@ import { Snowflake } from "/scripts/services/discord/snowflake.ts";
 import { animateIcon, AnimatedIconElement } from "/components/app/lib/animated-icon.ts";
 import { view } from "/components/app/lib/view.ts";
 
-import { Snowflake } from "/scripts/services/discord/snowflake";
+import { discordClient } from "/main.ts";
 
 let currentState: string | undefined;
 const changeState = (state?: string, color: string = "text", force: boolean = false) => {
@@ -46,12 +46,7 @@ const ready = async () => {
 
 	changeState("Fetching user", "warning");
 
-	const [settings, self] = await Promise.all([
-		discordClient.fetchSettings(),
-		discordClient.self()
-	]);
-	console.log("Settings:", settings);
-	console.log("Self:", self);
+	const self = await discordClient.self();
 	if (currentLoadToken !== loadToken) return;
 
 	const youBar = document.querySelector("nav.you-bar") as HTMLElement;
@@ -158,7 +153,7 @@ const ready = async () => {
 	const guildContainer = sidebar.querySelector("section.guilds")!;
 	guildContainer.innerHTML = "";
 	const guildIds: Snowflake[] = [];
-	for (const folder of settings.guildFolders!.folders) {
+	for (const folder of discordClient.settings!.guildFolders!.folders) {
 		for (const guildId of folder.guildIds) guildIds.push(guildId);
 	}
 
@@ -167,7 +162,7 @@ const ready = async () => {
 	const guildElementMap = new Map<Snowflake, HTMLElement>();
 	guildIds.forEach((id, index) => guildElementMap.set(id, guildElementsList[index]));
 
-	for (const folder of settings.guildFolders!.folders) {
+	for (const folder of discordClient.settings!.guildFolders!.folders) {
 		if (folder.id) {
 			const folderElement = document.createElement("div");
 			folderElement.classList.add("folder");

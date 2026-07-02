@@ -277,6 +277,18 @@ export class Channel<Ready extends boolean = true> {
 		else if (voiceChannels.includes(this.type)) return ChannelCategory.Voice;
 		else return ChannelCategory.Text;
 	};
+
+	async requestChannelMemberCount() {
+		await discordClient.send({
+			op: GatewayOpCode.RequestChannelMemberCount,
+			d: {
+				guild_id: this.guildId,
+				channel_ids: [this.id]
+			}
+		});
+
+		await discordClient.awaitEvent(GatewayDispatchEvent.GuildMemberListUpdate, (data: any) => data.channel_id === this.id);
+	};
 };
 
 export class ChannelCollection extends Collection<Channel | Channel<false>> {

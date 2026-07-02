@@ -15,7 +15,13 @@ export const render = async (container: HTMLElement, params: URLSearchParams) =>
 			title: "Unknown Guild"
 		};
 	} else {
-		const channels = await guild.listChannels();
+		const [channels, caretDownIcon, gearIcon, plusIcon, chatTextIcon] = await Promise.all([
+			guild.listChannels(),
+			getIcon("caret-down"),
+			getIcon("gear"),
+			getIcon("plus"),
+			getIcon("chat-text")
+		]);
 
 		const channelsContainer = container.querySelector(".channels") as HTMLElement;
 
@@ -30,7 +36,7 @@ export const render = async (container: HTMLElement, params: URLSearchParams) =>
 
 			const categoryCollapseIndicator = document.createElement("div");
 			categoryCollapseIndicator.classList.add("collapse");
-			categoryCollapseIndicator.innerHTML = await getIcon("caret-down");
+			categoryCollapseIndicator.innerHTML = caretDownIcon;
 
 			const nameElement = document.createElement("div");
 			nameElement.classList.add("name");
@@ -38,7 +44,7 @@ export const render = async (container: HTMLElement, params: URLSearchParams) =>
 
 			const categorySettingsButton = document.createElement("button");
 			categorySettingsButton.classList.add("settings");
-			categorySettingsButton.innerHTML = await getIcon("gear");
+			categorySettingsButton.innerHTML = gearIcon;
 			categorySettingsButton.setAttribute("tooltip", "Configure category");
 			categorySettingsButton.addEventListener("click", (event) => {
 				event.stopPropagation();
@@ -46,7 +52,7 @@ export const render = async (container: HTMLElement, params: URLSearchParams) =>
 
 			const categoryCreateChannelButton = document.createElement("button");
 			categoryCreateChannelButton.classList.add("create-channel");
-			categoryCreateChannelButton.innerHTML = await getIcon("plus");
+			categoryCreateChannelButton.innerHTML = plusIcon;
 			categoryCreateChannelButton.setAttribute("tooltip", "Create channel");
 			categoryCreateChannelButton.addEventListener("click", (event) => {
 				event.stopPropagation();
@@ -84,7 +90,7 @@ export const render = async (container: HTMLElement, params: URLSearchParams) =>
 
 			const channelSettingsButton = document.createElement("button");
 			channelSettingsButton.classList.add("settings");
-			channelSettingsButton.innerHTML = await getIcon("gear");
+			channelSettingsButton.innerHTML = gearIcon;
 			channelSettingsButton.setAttribute("tooltip", "Configure");
 			channelSettingsButton.addEventListener("click", (event) => {
 				event.stopPropagation();
@@ -99,7 +105,7 @@ export const render = async (container: HTMLElement, params: URLSearchParams) =>
 
 				const channelOpenChatButton = document.createElement("button");
 				channelOpenChatButton.classList.add("open-chat");
-				channelOpenChatButton.innerHTML = await getIcon("chat-text");
+				channelOpenChatButton.innerHTML = chatTextIcon;
 				channelOpenChatButton.setAttribute("tooltip", "Open chat");
 				channelOpenChatButton.addEventListener("click", (event) => {
 					event.stopPropagation();

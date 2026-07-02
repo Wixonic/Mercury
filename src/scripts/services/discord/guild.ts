@@ -255,6 +255,9 @@ export class Guild<Ready extends boolean = true> {
 	channels = new ChannelCollection();
 
 	constructor(data: any) {
+		const rawChannels = data.channels;
+		delete data.channels;
+
 		Object.assign(this, data);
 
 		if (data.icon) this.icon = new CDNElement(`/icons/${data.id}`, data.icon);
@@ -279,6 +282,10 @@ export class Guild<Ready extends boolean = true> {
 			badge: new CDNElement(`/guild-tag-badges/${data.id}`, data.profile.badge)
 		};
 		if (data.official_message_color !== undefined && data.official_message_color !== null) this.official_message_color = new Color(data.official_message_color);
+
+		if (rawChannels) {
+			for (const channelData of rawChannels) this.channels.set(channelData.id, new Channel(channelData));
+		}
 	};
 
 	async listChannels(force = false): Promise<Channel[]> {

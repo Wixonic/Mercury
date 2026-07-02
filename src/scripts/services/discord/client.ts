@@ -6,9 +6,9 @@ import { Client, RestClient } from "/scripts/lib/client.ts";
 import { store, type Session } from "/scripts/lib/store.ts";
 import { join, fake, wait, Color } from "/scripts/lib/utils.ts";
 
-import { GuildCollection } from "/scripts/services/discord/guild.ts";
+import { Guild, GuildCollection } from "/scripts/services/discord/guild.ts";
 import { Snowflake } from "/scripts/services/discord/snowflake.ts";
-import { UserCollection } from "/scripts/services/discord/user.ts";
+import { User, UserCollection } from "/scripts/services/discord/user.ts";
 
 type GatewayMessage = {
 	code: number;
@@ -479,10 +479,14 @@ export class DiscordClient extends Client {
 		}
 	};
 
-	async self(force?: boolean, cached?: boolean) {
-		const self = await this.users.get("@me", force, cached);
-		this.id = self!.id;
-		return self;
+	self<Cached extends boolean = false>(force?: boolean, cached?: Cached): Cached extends true ? User<true> | undefined : Promise<User<true>> {
+		const self = this.users.cached().get("@me");
+		if (cached) return self as any;
+
+		return this.users.get("@me", force, cached as any).then((self) => {
+			this.id = self!.id;
+			return self!;
+		}) as any;
 	};
 
 	private async resetAndRedirectToLogin() {
@@ -653,6 +657,25 @@ export class DiscordClient extends Client {
 						sessionStorage.setItem("discord_session_id", this.sessionId!);
 						sessionStorage.setItem("discord_resume_gateway_url", this.resumeGatewayURL!);
 
+						this.settings = parseClientSettings(PreloadedUserSettings.fromBase64(message.data.user_settings_proto));
+
+						const self = new User(message.data.user);
+						this.users.set("@me", self);
+						this.users.set(self.id, self);
+						this.id = self.id;
+
+						if (message.data.users) {
+							for (const userData of message.data.users) this.users.set(userData.id, new User(userData));
+						}
+
+						if (message.data.relationships) {
+							for (const relationship of message.data.relationships) {
+								if (relationship.user) this.users.set(relationship.user.id, new User(relationship.user));
+							}
+						}
+
+						for (const guildData of message.data.guilds) this.guilds.set(guildData.id, new Guild(guildData));
+
 						console.info("Ready - Session ID:", this.sessionId);
 
 						store.setState({
@@ -776,6 +799,45 @@ export class DiscordClient extends Client {
 
 			this.addEventListener(eventName, handler);
 		});
+	};
+
+	async requestGuildMembers(guildId: Snowflake, query = "", limit = 0, userIds?: Snowflake[]): Promise<any[]> {
+		const nonce = Math.random().toString(36).substring(2, 15);
+
+		try {
+			this.send({
+				op: GatewayOpCode.RequestGuildMembers,
+				d: {
+					guild_id: guildId,
+					query,
+					limit,
+					user_ids: userIds,
+					nonce
+				}
+			});
+
+			const response = await this.awaitEvent("GUILD_MEMBERS_CHUNK", (data) => data.nonce === nonce);
+			return response.members;
+		} catch (error) {
+			console.warn("Gateway requestGuildMembers timed out or failed, falling back to REST:", error);
+			if (userIds && userIds.length > 0) {
+				const results = await Promise.all(
+					userIds.map(async (id) => {
+						try {
+							const response = await this.rest.request(`/guilds/${guildId}/members/${id}`);
+							return await response.json();
+						} catch {
+							return null;
+						}
+					})
+				);
+				return results.filter(Boolean);
+			} else {
+				const url = `/guilds/${guildId}/members?limit=${limit || 1000}${query ? `&query=${encodeURIComponent(query)}` : ""}`;
+				const response = await this.rest.request(url);
+				return await response.json();
+			}
+		}
 	};
 
 	async send(data: any) {
