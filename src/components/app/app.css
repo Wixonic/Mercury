@@ -14,7 +14,7 @@ main {
 	width: calc(100% - 4rem);
 	height: calc(100% - 2rem);
 
-	border: 0.1rem solid hsla(var(--text), 10%);
+	border: 1px solid hsla(var(--text), 10%);
 	border-right: none;
 	border-bottom: none;
 	border-top-left-radius: 0.5rem;
