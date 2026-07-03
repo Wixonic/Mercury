@@ -26,7 +26,7 @@ header.titlebar h1.location {
 	grid-column: 2;
 	grid-row: 1;
 
-	font-size: 0.85rem;
+	font-size: 0.75rem;
 	font-weight: 600;
 	text-align: center;
 }
@@ -37,7 +37,7 @@ header.titlebar aside.state {
 
 	justify-content: right;
 
-	font-size: 0.75rem;
+	font-size: 0.65rem;
 	font-weight: 400;
 	text-align: right;
 
