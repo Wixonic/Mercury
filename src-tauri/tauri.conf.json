@@ -14,7 +14,7 @@
 		"windows": [
 			{
 				"title": "Mercury",
-				"width": 900,
+				"width": 1000,
 				"height": 600,
 				"titleBarStyle": "Overlay",
 				"hiddenTitle": true,
