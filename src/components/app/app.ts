@@ -151,6 +151,14 @@ const ready = async () => {
 	createGuildElement.innerHTML = createGuildIcon;
 	exploreGuildsElement.innerHTML = exploreGuildsIcon;
 
+	directMessagesElement.addEventListener("click", async () => {
+		await view("/views/direct-messages/direct-messages.html");
+	});
+
+	favoritesElement.addEventListener("click", async () => {
+		await view("/views/favorites/favorites.html");
+	});
+
 	const guildContainer = sidebar.querySelector("section.guilds")!;
 	guildContainer.innerHTML = "";
 	const guildIds: Snowflake[] = [];
@@ -179,6 +187,14 @@ const ready = async () => {
 			if (guildElement) guildContainer.append(guildElement);
 		}
 	}
+
+	createGuildElement.addEventListener("click", async () => {
+		await view("/views/create-guild/create-guild.html");
+	});
+
+	exploreGuildsElement.addEventListener("click", async () => {
+		await view("/views/explore-guilds/explore-guilds.html");
+	});
 
 	sidebar.classList.remove("loading");
 
