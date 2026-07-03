@@ -15,6 +15,9 @@ export const render = async (container: HTMLElement, params: URLSearchParams) =>
 			title: "Unknown Guild"
 		};
 	} else {
+		// const channelNameElement = container.querySelector(".channel-name") as HTMLElement;
+		// channelNameElement.textContent = guild.name ?? "Unknown Guild";
+
 		const [channels, caretDownIcon, gearIcon, plusIcon, chatTextIcon] = await Promise.all([
 			guild.listChannels(),
 			getIcon("caret-down"),
@@ -98,6 +101,12 @@ export const render = async (container: HTMLElement, params: URLSearchParams) =>
 
 			channelElement.addEventListener("click", (event) => {
 				event.stopPropagation();
+
+				const currentSelectedChannel = document.querySelector(".channel.selected");
+				if (currentSelectedChannel) currentSelectedChannel.classList.remove("selected");
+				channelElement.classList.add("selected");
+
+				// Display channel
 			});
 
 			if (channel.category === ChannelCategory.Voice) {

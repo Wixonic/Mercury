@@ -6,6 +6,7 @@
 
 main {
 	--channel-list-width: 16rem;
+	--channel-sidebar-width: 12rem;
 
 	position: absolute;
 	top: 2rem;
