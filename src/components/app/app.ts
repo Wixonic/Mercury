@@ -4,6 +4,7 @@ import JSONPackage from "/../package.json" with { type: "json" };
 
 import { getIcon } from "/scripts/lib/icon.ts";
 
+import { GatewayEvent, GatewayDispatchEvent } from "/scripts/services/discord/gateway.ts";
 import { Guild } from "/scripts/services/discord/guild.ts";
 import { Snowflake } from "/scripts/services/discord/snowflake.ts";
 
@@ -213,19 +214,19 @@ export const renderApp = (container: HTMLElement): (() => void) => {
 	const handleDisconnected = (_event: Event) => changeState("Disconnected", "error");
 	const handleResumed = (_event: Event) => ready();
 
-	discordClient.addEventListener("heartbeat", handleHeartbeat);
-	discordClient.addEventListener("connecting", handleConnecting);
-	discordClient.addEventListener("ready", handleReady);
-	discordClient.addEventListener("disconnected", handleDisconnected);
-	discordClient.addEventListener("resumed", handleResumed);
+	discordClient.addEventListener(GatewayEvent.Heartbeat, handleHeartbeat);
+	discordClient.addEventListener(GatewayEvent.Connecting, handleConnecting);
+	discordClient.addEventListener(GatewayDispatchEvent.Ready, handleReady);
+	discordClient.addEventListener(GatewayEvent.Disconnected, handleDisconnected);
+	discordClient.addEventListener(GatewayEvent.Resumed, handleResumed);
 
 	if (discordClient.ws && discordClient.sessionId) ready();
 
 	return () => {
-		discordClient.removeEventListener("heartbeat", handleHeartbeat);
-		discordClient.removeEventListener("connecting", handleConnecting);
-		discordClient.removeEventListener("ready", handleReady);
-		discordClient.removeEventListener("disconnected", handleDisconnected);
-		discordClient.removeEventListener("resumed", handleResumed);
+		discordClient.removeEventListener(GatewayEvent.Heartbeat, handleHeartbeat);
+		discordClient.removeEventListener(GatewayEvent.Connecting, handleConnecting);
+		discordClient.removeEventListener(GatewayDispatchEvent.Ready, handleReady);
+		discordClient.removeEventListener(GatewayEvent.Disconnected, handleDisconnected);
+		discordClient.removeEventListener(GatewayEvent.Resumed, handleResumed);
 	};
 };
