@@ -20,7 +20,11 @@
 > [!NOTE]
 > This project is not affiliated with Discord Inc. or any of its subsidiaries or affiliates.
 
+> [!IMPORTANT]
+> The core of this project is licensed under the Wixonic Non-Commercial License. See the [`LICENSE`](./LICENSE) file for details.
+> This project also includes third-party resources (such as icons). Please see the [`NOTICE.md`](./NOTICE.md) file for their respective licenses and copyright notices.
+
 ## Credits
 
-- [Phosphor Icons](https://phosphoricons.com/) for almost all icons used in the project - Licensed under the [MIT License](https://github.com/phosphor-icons/homepage/blob/master/LICENSE).
+- [Phosphor Icons](https://phosphoricons.com/) for almost all icons.
 - [Userdoccers](https://docs.discord.food) for the unofficial Discord User API documentation.
