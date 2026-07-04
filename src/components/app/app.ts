@@ -163,7 +163,7 @@ const ready = async () => {
 	guildContainer.innerHTML = "";
 	const guildIds: Snowflake[] = [];
 	for (const folder of discordClient.settings!.guildFolders!.folders) {
-		for (const guildId of folder.guildIds) guildIds.push(guildId);
+		for (const guildId of folder.guildIds) guildIds.push(guildId.toString());
 	}
 
 	const guildElementsList = await Promise.all(guildIds.map((id) => createElement(id)));
@@ -172,18 +172,18 @@ const ready = async () => {
 	guildIds.forEach((id, index) => guildElementMap.set(id, guildElementsList[index]));
 
 	for (const folder of discordClient.settings!.guildFolders!.folders) {
-		if (folder.id) {
+		if (folder.id?.value !== undefined) {
 			const folderElement = document.createElement("div");
 			folderElement.classList.add("folder");
 
 			for (const guildId of folder.guildIds) {
-				const guildElement = guildElementMap.get(guildId);
+				const guildElement = guildElementMap.get(guildId.toString());
 				if (guildElement) folderElement.append(guildElement);
 			}
 
 			guildContainer.append(folderElement);
 		} else {
-			const guildElement = guildElementMap.get(folder.guildIds[0]);
+			const guildElement = guildElementMap.get(folder.guildIds[0]?.toString() ?? "");
 			if (guildElement) guildContainer.append(guildElement);
 		}
 	}

@@ -8,6 +8,7 @@ import { StickerCollection } from "/scripts/services/discord/sticker.ts";
 import type { Snowflake } from "/scripts/services/discord/snowflake.ts";
 
 import { discordClient } from "/main.ts";
+import { GuildSettings } from "/scripts/services/discord/settings.ts";
 
 export enum GuildVerificationLevel {
 	None = 0,
@@ -253,6 +254,10 @@ export class Guild<Ready extends boolean = true> {
 	version?: Loaded<string, Ready>;
 
 	channels = new ChannelCollection();
+
+	get settings(): GuildSettings | undefined {
+		return discordClient.settings?.guilds?.guilds[this.id];
+	};
 
 	constructor(data: any) {
 		const rawChannels = data.channels;

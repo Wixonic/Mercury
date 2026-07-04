@@ -2,6 +2,7 @@ import { Collection, Loaded } from "/scripts/lib/utils.ts";
 
 import { CDNElement } from "/scripts/services/discord/cdn.ts";
 import { GatewayDispatchEvent, GatewayOpCode } from "/scripts/services/discord/gateway.ts";
+import { ChannelSettings } from "/scripts/services/discord/settings.ts";
 import type { Snowflake } from "/scripts/services/discord/snowflake.ts";
 import type { User } from "/scripts/services/discord/user.ts";
 
@@ -225,6 +226,11 @@ export class Channel<Ready extends boolean = true> {
 	is_viewable_and_writeable_by_all_members?: Loaded<boolean, Ready>;
 	template?: Loaded<string, Ready>;
 	version?: Loaded<string, Ready>;
+
+	get settings(): ChannelSettings | undefined {
+		if (!this.guildId) return undefined;
+		return discordClient.settings?.guilds?.guilds[this.guildId]?.channels[this.id];
+	};
 
 	constructor(data: any) {
 		Object.assign(this, data);

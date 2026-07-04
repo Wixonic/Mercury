@@ -10,11 +10,7 @@ import { Guild, GuildCollection } from "/scripts/services/discord/guild.ts";
 import { Snowflake } from "/scripts/services/discord/snowflake.ts";
 import { User, UserCollection } from "/scripts/services/discord/user.ts";
 
-import {
-	ClientSettings,
-	parseClientSettings,
-	deepWrap
-} from "/scripts/services/discord/settings.ts";
+import { ClientSettings } from "/scripts/services/discord/settings.ts";
 
 import {
 	GatewayMessage,
@@ -318,7 +314,7 @@ export class DiscordClient extends Client {
 						sessionStorage.setItem("discord_session_id", this.sessionId!);
 						sessionStorage.setItem("discord_resume_gateway_url", this.resumeGatewayURL!);
 
-						this.settings = parseClientSettings(PreloadedUserSettings.fromBase64(message.data.user_settings_proto));
+						this.settings = PreloadedUserSettings.fromBase64(message.data.user_settings_proto);
 
 						const self = new User(message.data.user);
 						this.users.set("@me", self);
@@ -407,7 +403,7 @@ export class DiscordClient extends Client {
 	async fetchSettings(): Promise<ClientSettings> {
 		const response = await this.rest.request("/users/@me/settings-proto/1");
 		const data = await response.json();
-		this.settings = parseClientSettings(PreloadedUserSettings.fromBase64(data.settings));
+		this.settings = PreloadedUserSettings.fromBase64(data.settings);
 		return this.settings!;
 	};
 
@@ -415,12 +411,12 @@ export class DiscordClient extends Client {
 		const response = await this.rest.request("/users/@me/settings-proto/1", {
 			method: "PATCH",
 			body: JSON.stringify({
-				settings: PreloadedUserSettings.toBase64(deepWrap(settings)),
+				settings: PreloadedUserSettings.toBase64(PreloadedUserSettings.create(settings)),
 				required_data_version: this.settings?.versions?.dataVersion
 			})
 		});
 		const data = await response.json();
-		this.settings = parseClientSettings(PreloadedUserSettings.fromBase64(data.settings));
+		this.settings = PreloadedUserSettings.fromBase64(data.settings);
 		return this.settings!;
 	};
 
