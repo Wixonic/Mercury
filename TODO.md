@@ -8,8 +8,9 @@
 	- [ ] Member List
 	- [ ] Invites
 	- [ ] Webhooks
-	- [ ] Categories
-	- [ ] Direct Messages
+	- [/] Categories
+		- [ ] Category Settings
+	- [/] Direct Messages
 	- [ ] Voice-based Channels
 		- [ ] Microphone
 		- [ ] Camera
@@ -18,6 +19,8 @@
 		- [ ] Stage Channels
 		- [ ] Voice State
 		- [ ] Voice Regions
+	- [ ] Create channel
+	- [ ] Reorder channels
 - [ ] [Messages](https://docs.discord.food/resources/message)
 	- [ ] Reactions
 	- [ ] Attachments
@@ -40,6 +43,7 @@
 	- [ ] Roblox Presence (via Roblox API, with Roblox token)
 	- [ ] Minecraft Presence (Java Edition) (via a mod?)
 - [ ] [Remote Auth Authentication](https://docs.discord.food/remote-authentication/desktop)
+- [ ] Self-updating and auto-updates
 
 # Considering implementing...
 - [ ] [Sending Nitro referrals](https://docs.discord.food/resources/premium-referral)
