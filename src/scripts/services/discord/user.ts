@@ -8,7 +8,7 @@ import { discordClient } from "/main.ts";
 export interface UserAvatarDecorationData {
 	asset: CDNElement;
 	sku_id: Snowflake;
-	expires_at: number | null;
+	expires_at?: Date;
 };
 
 export enum UserNameplateColorPalette {
@@ -27,15 +27,15 @@ export enum UserNameplateColorPalette {
 };
 
 export interface UserNameplateData {
-	asset: string;
+	asset: CDNElement;
 	sku_id: Snowflake;
 	label: string;
 	palette: UserNameplateColorPalette;
-	expires_at: number | null;
+	expires_at?: Date;
 };
 
 export interface UserCollectibles {
-	nameplate: UserNameplateData | null;
+	nameplate?: UserNameplateData;
 };
 
 export enum UserDisplayNameStyle {
@@ -69,10 +69,10 @@ export interface DisplayNameStyle {
 };
 
 export interface UserPrimaryGuild {
-	identity_enabled: boolean | null;
-	identity_guild_id: Snowflake | null;
-	tag: string | null;
-	badge: CDNElement | null;
+	identity_enabled?: boolean;
+	identity_guild_id?: Snowflake;
+	tag?: string;
+	badge?: CDNElement;
 };
 
 const PublicUserFlags = {
@@ -188,9 +188,6 @@ const UserPurchasedFlags = {
 } as const;
 export type UserPurchasedFlags = typeof UserPurchasedFlags[keyof typeof UserPurchasedFlags];
 
-/**
- * Premium usage flags denote what premium (Nitro) features a user has utilized.
- */
 const UserPremiumUsageFlags = {
 	PremiumDiscriminator: 1n << 0n,
 	AnimatedAvatar: 1n << 1n,
@@ -205,27 +202,27 @@ export enum UserAuthenticatorType {
 };
 
 export interface UserCustomStatus {
-	text: string | null;
-	emoji_id: Snowflake | null;
-	emoji_name: string | null;
-	expires_at: Date | null;
+	text?: string;
+	emoji_id?: Snowflake;
+	emoji_name?: string;
+	expires_at?: Date;
 };
 
 export enum UserStatusType {
-	online,
-	idle,
-	dnd,
-	invisible,
-	offline,
-	unknown
+	Online = "online",
+	Idle = "idle",
+	Dnd = "dnd",
+	Invisible = "invisible",
+	Offline = "offline",
+	Unknown = "unknown"
 };
 
 export class User<Partial extends boolean = false> {
-	id!: Snowflake;
-	username!: string;
-	discriminator!: string;
+	id: Snowflake;
+	username: string;
+	discriminator: string;
 	global_name?: string;
-	avatar!: CDNElement;
+	avatar: CDNElement;
 	avatar_decoration_data?: UserAvatarDecorationData;
 	collectibles?: UserCollectibles;
 	display_name_styles?: DisplayNameStyle;
@@ -259,30 +256,78 @@ export class User<Partial extends boolean = false> {
 	analytics_token!: PartialType<string, Partial>;
 
 	constructor(data: any) {
-		Object.assign(this, data);
+		const Partial = data.verified === undefined;
 
+		this.id = data.id;
+		this.username = data.username;
+		this.discriminator = data.discriminator;
+		this.global_name = data.global_name;
 		this.avatar = data.avatar ? new CDNElement(`/avatars/${data.id}`, data.avatar) : new CDNElement("/embed/avatars", this.user_index.toString());
 		if (data.avatar_decoration_data) this.avatar_decoration_data = {
-			...data.avatar_decoration_data,
-			asset: new CDNElement("/avatar-decoration-presets", data.avatar_decoration_data.asset)
+			asset: new CDNElement("/avatar-decoration-presets", data.avatar_decoration_data.asset),
+			sku_id: data.avatar_decoration_data.sku_id,
+			expires_at: data.avatar_decoration_data.expires_at ? new Date(data.avatar_decoration_data.expires_at) : undefined
 		};
 		if (data.collectibles) this.collectibles = {
-			...data.collectibles,
 			nameplate: data.collectibles.nameplate ? {
-				...data.collectibles.nameplate,
-				asset: new CDNElement(`/assets/collectibles/`, data.collectibles.nameplate.asset)
-			} : null
+				asset: new CDNElement(`/assets/collectibles/`, data.collectibles.nameplate.asset),
+				sku_id: data.collectibles.nameplate.sku_id,
+				label: data.collectibles.nameplate.label,
+				palette: data.collectibles.nameplate.palette,
+				expires_at: data.collectibles.nameplate.expires_at ? new Date(data.collectibles.nameplate.expires_at) : undefined
+			} : undefined
 		};
-		if (data.banner) this.banner = new CDNElement(`/banners/${data.id}`, data.banner);
-		if (data.accent_color !== undefined && data.accent_color !== null) this.accent_color = new Color(data.accent_color);
 		if (data.display_name_styles) this.display_name_styles = {
-			...data.display_name_styles,
+			font_id: data.display_name_styles.font_id,
+			effect_id: data.display_name_styles.effect_id,
 			colors: (data.display_name_styles.colors ?? []).map((color: number) => new Color(color))
 		};
 		if (data.primary_guild) this.primary_guild = {
-			...data.primary_guild,
-			badge: data.primary_guild.badge ? new CDNElement(`/guild-tag-badges/${data.primary_guild.identity_guild_id}`, data.primary_guild.badge) : null
+			identity_enabled: data.primary_guild.identity_enabled,
+			identity_guild_id: data.primary_guild.identity_guild_id,
+			tag: data.primary_guild.tag,
+			badge: data.primary_guild.badge ? new CDNElement(`/guild-tag-badges/${data.primary_guild.identity_guild_id}`, data.primary_guild.badge) : undefined
 		};
+		this.bot = data.bot;
+		this.system = data.system;
+		if (data.banner) this.banner = new CDNElement(`/banners/${data.id}`, data.banner);
+		if (data.accent_color !== undefined && data.accent_color !== null) this.accent_color = new Color(data.accent_color);
+		this.public_flags = data.public_flags;
+
+		if (Partial == false) {
+			this.linked_users = (data.linked_users ?? []).map((link: any) => ({
+				created_at: new Date(link.created_at),
+				updated_at: new Date(link.updated_at),
+				link_status: link.link_status,
+				link_type: link.link_type,
+				requestor_id: link.requestor_id,
+				user_id: link.user_id
+			}));
+			this.mfa_enabled = data.mfa_enabled;
+			this.nsfw_allowed = data.nsfw_allowed;
+			this.age_verification_status = data.age_verification_status;
+			this.pronouns = data.pronouns;
+			this.bio = data.bio;
+			this.locale = data.locale;
+			this.verified = data.verified;
+			this.email = data.email;
+			this.phone = data.phone;
+			this.premium_type = data.premium_type;
+			if (data.premium_state) this.premium_state = {
+				premium_source: data.premium_state.premium_source,
+				premium_subscription_type: data.premium_state.premium_subscription_type,
+				premium_subscription_group_role: data.premium_state.premium_subscription_group_role
+			};
+			this.personal_connection_id = data.personal_connection_id;
+			this.flags = data.flags;
+			this.purchased_flags = data.purchased_flags;
+			this.premium_usage_flags = data.premium_usage_flags;
+			this.desktop = data.desktop;
+			this.mobile = data.mobile;
+			this.has_bounced_email = data.has_bounced_email;
+			this.authenticator_types = data.authenticator_types;
+			this.analytics_token = data.analytics_token;
+		}
 	};
 
 	get user_index(): number {
@@ -297,6 +342,8 @@ export class User<Partial extends boolean = false> {
 export class UserCollection extends Collection<User | User<true>> {
 	async fetch<Partial extends boolean = false>(id: Snowflake, partial: Partial = false as Partial): Promise<User<Partial>> {
 		const response = await discordClient.rest.request(`/users/${id}${partial ? "/basic" : ""}`);
-		return new User<Partial>(await response.json());
+		const user = new User<Partial>(await response.json());
+		discordClient.users.patch(id, user);
+		return user;
 	};
 };

@@ -1,0 +1,1 @@
+export type PartialType<Type, Partial extends boolean> = Partial extends true ? Type | undefined : Type;

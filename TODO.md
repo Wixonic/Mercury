@@ -2,7 +2,7 @@
 - [/] [Channels](https://docs.discord.food/resources/channel)
 	- [ ] Typing Indicator
 	- [ ] Channel Settings
-	- [ ] Permissions
+	- [/] Permissions
 	- [ ] Threads
 	- [ ] Pinned Messages
 	- [ ] Member List
@@ -21,7 +21,7 @@
 		- [ ] Voice Regions
 	- [ ] Create channel
 	- [ ] Reorder channels
-- [ ] [Messages](https://docs.discord.food/resources/message)
+- [/] [Messages](https://docs.discord.food/resources/message)
 	- [ ] Reactions
 	- [ ] Attachments
 	- [ ] Embeds

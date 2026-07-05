@@ -32,119 +32,119 @@ export enum GuildExplicitContentFilterLevel {
 };
 
 export enum GuildFeature {
-	ACTIVITIES_ALPHA,
-	ACTIVITIES_EMPLOYEE,
-	ACTIVITIES_INTERNAL_DEV,
-	ACTIVITY_FEED_DISABLED_BY_USER,
-	ACTIVITY_FEED_ENABLED_BY_USER,
-	AGE_VERIFICATION_LARGE_GUILD,
-	ANIMATED_BANNER,
-	ANIMATED_ICON,
-	AUDIO_BITRATE_128_KBPS,
-	AUDIO_BITRATE_256_KBPS,
-	AUDIO_BITRATE_384_KBPS,
-	AUTO_MODERATION,
-	BANNER,
-	BFG,
-	BOT_DEVELOPER_EARLY_ACCESS,
-	BYPASS_SLOWMODE_PERMISSION_MIGRATION_COMPLETE,
-	CHANNEL_EMOJIS_GENERATED,
-	CHANNEL_ICON_EMOJIS_GENERATED,
-	COMMERCE,
-	COMMUNITY,
-	COMMUNITY_CANARY,
-	COMMUNITY_EXP_LARGE_GATED,
-	COMMUNITY_EXP_LARGE_UNGATED,
-	COMMUNITY_EXP_MEDIUM,
-	CONFERENCE,
-	CONSIDERED_EXTERNALLY_DISCOVERABLE,
-	CREATOR_MONETIZABLE,
-	CREATOR_MONETIZABLE_DISABLED,
-	CREATOR_MONETIZABLE_PENDING_NEW_OWNER_ONBOARDING,
-	CREATOR_MONETIZABLE_PROVISIONAL,
-	CREATOR_MONETIZABLE_RESTRICTED,
-	CREATOR_MONETIZABLE_WHITEGLOVE,
-	CREATOR_MONETIZATION_APPLICATION_ALLOWLIST,
-	CREATOR_STORE_PAGE,
-	DEVELOPER_SUPPORT_SERVER,
-	DISCOVERABLE,
-	DISCOVERABLE_DISABLED,
-	ENABLED_DISCOVERABLE_BEFORE,
-	ENABLED_MODERATION_EXPERIENCE_FOR_NON_COMMUNITY,
-	ENHANCED_ROLE_COLORS,
-	EXPOSED_TO_ACTIVITIES_WTP_EXPERIMENT,
-	FORWARDING_DISABLED,
-	GAME_SERVER_HOSTING,
-	GAME_SERVERS,
-	GUESTS_ENABLED,
-	GUILD_ONBOARDING,
-	GUILD_ONBOARDING_EVER_ENABLED,
-	GUILD_ONBOARDING_HAS_PROMPTS,
-	GUILD_PRODUCTS,
-	GUILD_PRODUCTS_ALLOW_ARCHIVED_FILE,
-	GUILD_SERVER_GUIDE,
-	GUILD_TAGS,
-	GUILD_TAGS_BADGE_PACK_CREEPY_CRAWLIES,
-	GUILD_TAGS_BADGE_PACK_FLEX,
-	GUILD_TAGS_BADGE_PACK_PETS,
-	GUILD_TAGS_BADGE_PACK_PLANT,
-	GUILD_WEB_PAGE_VANITY_URL,
-	HAD_EARLY_ACTIVITIES_ACCESS,
-	HAS_DIRECTORY_ENTRY,
-	HIDE_FROM_EXPERIMENT_UI,
-	HUB,
-	INCREASED_THREAD_LIMIT,
-	INTERNAL_EMPLOYEE_ONLY,
-	INVITE_SPLASH,
-	INVITES_DISABLED,
-	LINKED_TO_HUB,
-	MAX_FILE_SIZE_50_MB,
-	MAX_FILE_SIZE_100_MB,
-	MAX_FILE_SIZE_250_MB,
-	MEMBER_VERIFICATION_GATE_ENABLED,
-	MEMBER_VERIFICATION_MANUAL_APPROVAL,
-	MORE_EMOJI,
-	MORE_SOUNDBOARD,
-	MORE_STICKERS,
-	NEWS,
-	NON_COMMUNITY_RAID_ALERTS,
-	OFFICIAL_GAME_GUILD,
-	PARTNERED,
-	PIN_PERMISSION_MIGRATION_COMPLETE,
-	POWERUP_BETA_FEATURES,
-	PREMIUM_TIER_3_OVERRIDE,
-	PREVIEW_ENABLED,
-	PRODUCTS_AVAILABLE_FOR_PURCHASE,
-	RAID_ALERTS_DISABLED,
-	RELAY_ENABLED,
-	REPORT_TO_MOD_PILOT,
-	REPORT_TO_MOD_SURVEY,
-	ROLE_ICONS,
-	ROLE_SUBSCRIPTIONS_AVAILABLE_FOR_PURCHASE,
-	ROLE_SUBSCRIPTIONS_ENABLED,
-	SHARED_CANVAS_FRIENDS_AND_FAMILY_TEST,
-	SOCIAL_LAYER_STOREFRONT,
-	SOUNDBOARD,
-	STAGE_CHANNEL_VIEWERS_50,
-	STAGE_CHANNEL_VIEWERS_150,
-	STAGE_CHANNEL_VIEWERS_300,
-	SUMMARIES_ENABLED_GA,
-	SUMMARIES_DISABLED_BY_USER,
-	SUMMARIES_ENABLED_BY_USER,
-	SUMMARIES_LONG_LOOKBACK,
-	SUMMARIES_OPT_OUT_EXPERIENCE,
-	STAFF_LEVEL_COLLABORATOR_REQUIRED,
-	STAFF_LEVEL_RESTRICTED_COLLABORATOR_REQUIRED,
-	TIERLESS_BOOSTING,
-	TIERLESS_BOOSTING_SYSTEM_MESSAGE,
-	VANITY_URL,
-	VERIFIED,
-	VIDEO_BITRATE_ENHANCED,
-	VIDEO_QUALITY_720_60FPS,
-	VIDEO_QUALITY_1080_60FPS,
-	VIP_REGIONS,
-	VOICE_IN_THREADS,
-	WELCOME_SCREEN_ENABLED,
+	ActivitiesAlpha = "ACTIVITIES_ALPHA",
+	ActivitiesEmployee = "ACTIVITIES_EMPLOYEE",
+	ActivitiesInternalDev = "ACTIVITIES_INTERNAL_DEV",
+	ActivityFeedDisabledByUser = "ACTIVITY_FEED_DISABLED_BY_USER",
+	ActivityFeedEnabledByUser = "ACTIVITY_FEED_ENABLED_BY_USER",
+	AgeVerificationLargeGuild = "AGE_VERIFICATION_LARGE_GUILD",
+	AnimatedBanner = "ANIMATED_BANNER",
+	AnimatedIcon = "ANIMATED_ICON",
+	AudioBitrate128Kbps = "AUDIO_BITRATE_128_KBPS",
+	AudioBitrate256Kbps = "AUDIO_BITRATE_256_KBPS",
+	AudioBitrate384Kbps = "AUDIO_BITRATE_384_KBPS",
+	AutoModeration = "AUTO_MODERATION",
+	Banner = "BANNER",
+	Bfg = "BFG",
+	BotDeveloperEarlyAccess = "BOT_DEVELOPER_EARLY_ACCESS",
+	BypassSlowmodePermissionMigrationComplete = "BYPASS_SLOWMODE_PERMISSION_MIGRATION_COMPLETE",
+	ChannelEmojisGenerated = "CHANNEL_EMOJIS_GENERATED",
+	ChannelIconEmojisGenerated = "CHANNEL_ICON_EMOJIS_GENERATED",
+	Commerce = "COMMERCE",
+	Community = "COMMUNITY",
+	CommunityCanary = "COMMUNITY_CANARY",
+	CommunityExpLargeGated = "COMMUNITY_EXP_LARGE_GATED",
+	CommunityExpLargeUngated = "COMMUNITY_EXP_LARGE_UNGATED",
+	CommunityExpMedium = "COMMUNITY_EXP_MEDIUM",
+	Conference = "CONFERENCE",
+	ConsideredExternallyDiscoverable = "CONSIDERED_EXTERNALLY_DISCOVERABLE",
+	CreatorMonetizable = "CREATOR_MONETIZABLE",
+	CreatorMonetizableDisabled = "CREATOR_MONETIZABLE_DISABLED",
+	CreatorMonetizablePendingNewOwnerOnboarding = "CREATOR_MONETIZABLE_PENDING_NEW_OWNER_ONBOARDING",
+	CreatorMonetizableProvisional = "CREATOR_MONETIZABLE_PROVISIONAL",
+	CreatorMonetizableRestricted = "CREATOR_MONETIZABLE_RESTRICTED",
+	CreatorMonetizableWhiteglove = "CREATOR_MONETIZABLE_WHITEGLOVE",
+	CreatorMonetizationApplicationAllowlist = "CREATOR_MONETIZATION_APPLICATION_ALLOWLIST",
+	CreatorStorePage = "CREATOR_STORE_PAGE",
+	DeveloperSupportServer = "DEVELOPER_SUPPORT_SERVER",
+	Discoverable = "DISCOVERABLE",
+	DiscoverableDisabled = "DISCOVERABLE_DISABLED",
+	EnabledDiscoverableBefore = "ENABLED_DISCOVERABLE_BEFORE",
+	EnabledModerationExperienceForNonCommunity = "ENABLED_MODERATION_EXPERIENCE_FOR_NON_COMMUNITY",
+	EnhancedRoleColors = "ENHANCED_ROLE_COLORS",
+	ExposedToActivitiesWtpExperiment = "EXPOSED_TO_ACTIVITIES_WTP_EXPERIMENT",
+	ForwardingDisabled = "FORWARDING_DISABLED",
+	GameServerHosting = "GAME_SERVER_HOSTING",
+	GameServers = "GAME_SERVERS",
+	GuestsEnabled = "GUESTS_ENABLED",
+	GuildOnboarding = "GUILD_ONBOARDING",
+	GuildOnboardingEverEnabled = "GUILD_ONBOARDING_EVER_ENABLED",
+	GuildOnboardingHasPrompts = "GUILD_ONBOARDING_HAS_PROMPTS",
+	GuildProducts = "GUILD_PRODUCTS",
+	GuildProductsAllowArchivedFile = "GUILD_PRODUCTS_ALLOW_ARCHIVED_FILE",
+	GuildServerGuide = "GUILD_SERVER_GUIDE",
+	GuildTags = "GUILD_TAGS",
+	GuildTagsBadgePackCreepyCrawlies = "GUILD_TAGS_BADGE_PACK_CREEPY_CRAWLIES",
+	GuildTagsBadgePackFlex = "GUILD_TAGS_BADGE_PACK_FLEX",
+	GuildTagsBadgePackPets = "GUILD_TAGS_BADGE_PACK_PETS",
+	GuildTagsBadgePackPlant = "GUILD_TAGS_BADGE_PACK_PLANT",
+	GuildWebPageVanityUrl = "GUILD_WEB_PAGE_VANITY_URL",
+	HadEarlyActivitiesAccess = "HAD_EARLY_ACTIVITIES_ACCESS",
+	HasDirectoryEntry = "HAS_DIRECTORY_ENTRY",
+	HideFromExperimentUi = "HIDE_FROM_EXPERIMENT_UI",
+	Hub = "HUB",
+	IncreasedThreadLimit = "INCREASED_THREAD_LIMIT",
+	InternalEmployeeOnly = "INTERNAL_EMPLOYEE_ONLY",
+	InviteSplash = "INVITE_SPLASH",
+	InvitesDisabled = "INVITES_DISABLED",
+	LinkedToHub = "LINKED_TO_HUB",
+	MaxFileSize50Mb = "MAX_FILE_SIZE_50_MB",
+	MaxFileSize100Mb = "MAX_FILE_SIZE_100_MB",
+	MaxFileSize250Mb = "MAX_FILE_SIZE_250_MB",
+	MemberVerificationGateEnabled = "MEMBER_VERIFICATION_GATE_ENABLED",
+	MemberVerificationManualApproval = "MEMBER_VERIFICATION_MANUAL_APPROVAL",
+	MoreEmoji = "MORE_EMOJI",
+	MoreSoundboard = "MORE_SOUNDBOARD",
+	MoreStickers = "MORE_STICKERS",
+	News = "NEWS",
+	NonCommunityRaidAlerts = "NON_COMMUNITY_RAID_ALERTS",
+	OfficialGameGuild = "OFFICIAL_GAME_GUILD",
+	Partnered = "PARTNERED",
+	PinPermissionMigrationComplete = "PIN_PERMISSION_MIGRATION_COMPLETE",
+	PowerupBetaFeatures = "POWERUP_BETA_FEATURES",
+	PremiumTier3Override = "PREMIUM_TIER_3_OVERRIDE",
+	PreviewEnabled = "PREVIEW_ENABLED",
+	ProductsAvailableForPurchase = "PRODUCTS_AVAILABLE_FOR_PURCHASE",
+	RaidAlertsDisabled = "RAID_ALERTS_DISABLED",
+	RelayEnabled = "RELAY_ENABLED",
+	ReportToModPilot = "REPORT_TO_MOD_PILOT",
+	ReportToModSurvey = "REPORT_TO_MOD_SURVEY",
+	RoleIcons = "ROLE_ICONS",
+	RoleSubscriptionsAvailableForPurchase = "ROLE_SUBSCRIPTIONS_AVAILABLE_FOR_PURCHASE",
+	RoleSubscriptionsEnabled = "ROLE_SUBSCRIPTIONS_ENABLED",
+	SharedCanvasFriendsAndFamilyTest = "SHARED_CANVAS_FRIENDS_AND_FAMILY_TEST",
+	SocialLayerStorefront = "SOCIAL_LAYER_STOREFRONT",
+	Soundboard = "SOUNDBOARD",
+	StageChannelViewers50 = "STAGE_CHANNEL_VIEWERS_50",
+	StageChannelViewers150 = "STAGE_CHANNEL_VIEWERS_150",
+	StageChannelViewers300 = "STAGE_CHANNEL_VIEWERS_300",
+	SummariesEnabledGa = "SUMMARIES_ENABLED_GA",
+	SummariesDisabledByUser = "SUMMARIES_DISABLED_BY_USER",
+	SummariesEnabledByUser = "SUMMARIES_ENABLED_BY_USER",
+	SummariesLongLookback = "SUMMARIES_LONG_LOOKBACK",
+	SummariesOptOutExperience = "SUMMARIES_OPT_OUT_EXPERIENCE",
+	StaffLevelCollaboratorRequired = "STAFF_LEVEL_COLLABORATOR_REQUIRED",
+	StaffLevelRestrictedCollaboratorRequired = "STAFF_LEVEL_RESTRICTED_COLLABORATOR_REQUIRED",
+	TierlessBoosting = "TIERLESS_BOOSTING",
+	TierlessBoostingSystemMessage = "TIERLESS_BOOSTING_SYSTEM_MESSAGE",
+	VanityUrl = "VANITY_URL",
+	Verified = "VERIFIED",
+	VideoBitrateEnhanced = "VIDEO_BITRATE_ENHANCED",
+	VideoQuality72060fps = "VIDEO_QUALITY_720_60FPS",
+	VideoQuality108060fps = "VIDEO_QUALITY_1080_60FPS",
+	VipRegions = "VIP_REGIONS",
+	VoiceInThreads = "VOICE_IN_THREADS",
+	WelcomeScreenEnabled = "WELCOME_SCREEN_ENABLED"
 };
 
 export enum GuildMfaLevel {
@@ -153,14 +153,14 @@ export enum GuildMfaLevel {
 };
 
 export const GuildSystemChannelFlags = {
-	SUPPRESS_JOIN_NOTIFICATIONS: 1n << 0n,
-	SUPPRESS_PREMIUM_SUBSCRIPTIONS: 1n << 1n,
-	SUPPRESS_GUILD_REMINDER_NOTIFICATIONS: 1n << 2n,
-	SUPPRESS_JOIN_NOTIFICATION_REPLIES: 1n << 3n,
-	SUPPRESS_ROLE_SUBSCRIPTION_PURCHASE_NOTIFICATIONS: 1n << 4n,
-	SUPPRESS_ROLE_SUBSCRIPTION_PURCHASE_NOTIFICATION_REPLIES: 1n << 5n,
-	SUPPRESS_CHANNEL_PROMPT_DEADCHAT: 1n << 7n,
-	SUPPRESS_UGC_ADDED_NOTIFICATIONS: 1n << 8n
+	SuppressJoinNotifications: 1n << 0n,
+	SuppressPremiumSubscriptions: 1n << 1n,
+	SuppressGuildReminderNotifications: 1n << 2n,
+	SuppressJoinNotificationReplies: 1n << 3n,
+	SuppressRoleSubscriptionPurchaseNotifications: 1n << 4n,
+	SuppressRoleSubscriptionPurchaseReplies: 1n << 5n,
+	SuppressChannelPromptDeadchat: 1n << 7n,
+	SuppressUgcAddedNotifications: 1n << 8n
 } as const;
 export type GuildSystemChannelFlags = typeof GuildSystemChannelFlags[keyof typeof GuildSystemChannelFlags];
 
@@ -185,10 +185,10 @@ export enum GuildHubType {
 };
 
 export interface GuildAutomodIncidentsData {
-	raid_detected_at: Date | null;
-	dm_spam_detected_at: Date | null;
-	invites_disabled_until: Date | null;
-	dms_disabled_until: Date | null;
+	raid_detected_at?: Date;
+	dm_spam_detected_at?: Date;
+	invites_disabled_until?: Date;
+	dms_disabled_until?: Date;
 };
 
 export interface GuildPremiumFeatures {
@@ -204,16 +204,16 @@ export interface GuildIdentity {
 };
 
 export class Guild<Partial extends boolean = false> {
-	id!: Snowflake;
-	name!: string;
+	id: Snowflake;
+	name: string;
 	icon?: CDNElement;
 	home_header?: CDNElement;
 	splash?: CDNElement;
 	discovery_splash?: CDNElement;
 	description?: string;
-	features!: GuildFeature[];
-	emojis!: EmojiCollection;
-	stickers!: StickerCollection;
+	features: GuildFeature[];
+	emojis: EmojiCollection;
+	stickers: StickerCollection;
 	approximate_member_count?: number;
 	approximate_presence_count?: number;
 
@@ -260,37 +260,73 @@ export class Guild<Partial extends boolean = false> {
 	};
 
 	constructor(data: any) {
-		const rawChannels = data.channels;
-		delete data.channels;
+		const Partial = data.owner_id === undefined;
 
-		Object.assign(this, data);
-
+		this.id = data.id;
+		this.name = data.name;
 		if (data.icon) this.icon = new CDNElement(`/icons/${data.id}`, data.icon);
 		if (data.home_header) this.home_header = new CDNElement(`/home-headers/${data.id}`, data.home_header);
 		if (data.splash) this.splash = new CDNElement(`/splashes/${data.id}`, data.splash);
 		if (data.discovery_splash) this.discovery_splash = new CDNElement(`/discovery-splashes/${data.id}`, data.discovery_splash);
+		this.description = data.description;
 		this.features = data.features ?? [];
 		this.emojis = new EmojiCollection(data.emojis ?? {});
 		this.stickers = new StickerCollection(data.stickers ?? {});
+		this.approximate_member_count = data.approximate_member_count;
+		this.approximate_presence_count = data.approximate_presence_count;
 
-		if (data.banner) this.banner = new CDNElement(`/banners/${data.id}`, data.banner);
-		if (data.roles) this.roles = new RoleCollection(data.roles);
-		if (data.premium_progress_bar_enabled_user_updated_at) this.premium_progress_bar_enabled_user_updated_at = new Date(data.premium_progress_bar_enabled_user_updated_at);
-		if (data.incidents_data) this.incidents_data = {
-			raid_detected_at: data.incidents_data.raid_detected_at ? new Date(data.incidents_data.raid_detected_at) : null,
-			dm_spam_detected_at: data.incidents_data.dm_spam_detected_at ? new Date(data.incidents_data.dm_spam_detected_at) : null,
-			invites_disabled_until: data.incidents_data.invites_disabled_until ? new Date(data.incidents_data.invites_disabled_until) : null,
-			dms_disabled_until: data.incidents_data.dms_disabled_until ? new Date(data.incidents_data.dms_disabled_until) : null
-		};
-		if (data.profile) this.profile = {
-			tag: data.profile.tag,
-			badge: new CDNElement(`/guild-tag-badges/${data.id}`, data.profile.badge)
-		};
-		if (data.official_message_color !== undefined && data.official_message_color !== null) this.official_message_color = new Color(data.official_message_color);
-
-		if (rawChannels) {
-			for (const channelData of rawChannels) this.channels.set(channelData.id, new Channel(channelData));
+		if (!Partial) {
+			if (data.banner) this.banner = new CDNElement(`/banners/${data.id}`, data.banner);
+			this.owner_id = data.owner_id;
+			this.afk_channel_id = data.afk_channel_id;
+			this.afk_timeout = data.afk_timeout;
+			this.widget_enabled = data.widget_enabled;
+			this.widget_channel_id = data.widget_channel_id;
+			this.verification_level = data.verification_level;
+			this.default_message_notifications = data.default_message_notifications;
+			this.explicit_content_filter = data.explicit_content_filter;
+			this.roles = new RoleCollection(data.roles ?? []);
+			this.mfa_level = data.mfa_level;
+			this.system_channel_id = data.system_channel_id;
+			this.system_channel_flags = data.system_channel_flags;
+			this.rules_channel_id = data.rules_channel_id;
+			this.public_updates_channel_id = data.public_updates_channel_id;
+			this.safety_alerts_channel_id = data.safety_alerts_channel_id;
+			this.max_presences = data.max_presences;
+			this.max_members = data.max_members;
+			this.vanity_url_code = data.vanity_url_code;
+			this.premium_tier = data.premium_tier;
+			this.premium_subscription_count = data.premium_subscription_count;
+			this.preferred_locale = data.preferred_locale;
+			this.max_video_channel_users = data.max_video_channel_users;
+			this.max_stage_video_channel_users = data.max_stage_video_channel_users;
+			this.nsfw_level = data.nsfw_level;
+			this.owner_configured_content_level = data.owner_configured_content_level;
+			this.hub_type = data.hub_type;
+			this.premium_progress_bar_enabled = data.premium_progress_bar_enabled;
+			if (data.premium_progress_bar_enabled_user_updated_at) this.premium_progress_bar_enabled_user_updated_at = new Date(data.premium_progress_bar_enabled_user_updated_at);
+			this.latest_onboarding_question_id = data.latest_onboarding_question_id;
+			if (data.incidents_data) this.incidents_data = {
+				raid_detected_at: data.incidents_data.raid_detected_at ? new Date(data.incidents_data.raid_detected_at) : undefined,
+				dm_spam_detected_at: data.incidents_data.dm_spam_detected_at ? new Date(data.incidents_data.dm_spam_detected_at) : undefined,
+				invites_disabled_until: data.incidents_data.invites_disabled_until ? new Date(data.incidents_data.invites_disabled_until) : undefined,
+				dms_disabled_until: data.incidents_data.dms_disabled_until ? new Date(data.incidents_data.dms_disabled_until) : undefined
+			};
+			if (data.premium_features) this.premium_features = {
+				features: data.premium_features.features,
+				additional_emoji_slots: data.premium_features.additional_emoji_slots,
+				additional_sticker_slots: data.premium_features.additional_sticker_slots,
+				additional_sound_slots: data.premium_features.additional_sound_slots
+			};
+			if (data.profile) this.profile = {
+				tag: data.profile.tag,
+				badge: new CDNElement(`/guild-tag-badges/${data.id}`, data.profile.badge)
+			};
+			if (data.official_message_color !== undefined && data.official_message_color !== null) this.official_message_color = new Color(data.official_message_color);
+			this.version = data.version;
 		}
+
+		this.channels = new ChannelCollection(data.channels ?? []);
 	};
 
 	async listChannels(force = false): Promise<Channel[]> {
@@ -323,6 +359,8 @@ export class Guild<Partial extends boolean = false> {
 export class GuildCollection extends Collection<Guild | Guild<true>> {
 	async fetch<Partial extends boolean = false>(id: Snowflake, partial: Partial = false as Partial): Promise<Guild<Partial>> {
 		const response = await discordClient.rest.request(`/guilds/${id}${partial ? "/basic" : ""}`);
-		return new Guild<Partial>(await response.json());
+		const guild = new Guild<Partial>(await response.json());
+		discordClient.guilds.patch(id, guild);
+		return guild;
 	};
 };
