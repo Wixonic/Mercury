@@ -115,7 +115,7 @@ const ready = async () => {
 		const guildElement = document.createElement("button");
 		guildElement.classList.add("guild");
 
-		let guild: Guild<true> | Guild<false> | null = null;
+		let guild: Guild<false> | Guild<true> | null = null;
 		try {
 			guild = await discordClient.guilds.get(guildId) ?? null;
 		} catch (error) {

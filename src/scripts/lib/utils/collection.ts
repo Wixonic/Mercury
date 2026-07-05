@@ -52,4 +52,4 @@ export class Collection<T> {
 		this.cache.clear();
 	};
 };
-export type Loaded<T, IsLoaded extends boolean> = IsLoaded extends true ? T : T | undefined;
+export type PartialType<T, Partial extends boolean> = Partial extends true ? T | undefined : T;

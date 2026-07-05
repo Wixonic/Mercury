@@ -133,7 +133,7 @@ export class DiscordClient extends Client {
 		}
 	};
 
-	self<Cached extends boolean = false>(force?: boolean, cached?: Cached): Cached extends true ? User<true> | undefined : Promise<User<true>> {
+	self<Cached extends boolean = false>(force?: boolean, cached?: Cached): Cached extends true ? User | undefined : Promise<User> {
 		const self = this.users.cached().get("@me");
 		if (cached) return self as any;
 

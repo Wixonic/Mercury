@@ -1,4 +1,4 @@
-import { Collection, Loaded } from "/scripts/lib/utils.ts";
+import { Collection, PartialType } from "/scripts/lib/utils.ts";
 
 import { CDNElement } from "/scripts/services/discord/cdn.ts";
 import { GatewayDispatchEvent, GatewayOpCode } from "/scripts/services/discord/gateway.ts";
@@ -171,7 +171,7 @@ export interface LinkedLobby {
 	require_application_authorization: boolean;
 };
 
-export class Channel<Ready extends boolean = true> {
+export class Channel<Partial extends boolean = false> {
 	id!: Snowflake;
 	type!: ChannelType;
 	name?: string;
@@ -179,53 +179,53 @@ export class Channel<Ready extends boolean = true> {
 	icon?: CDNElement;
 	guildId?: Snowflake;
 
-	position?: Loaded<number, Ready>;
-	permission_overwritees?: Loaded<ChannelPermissionOverwrite[], Ready>;
-	topic?: Loaded<string, Ready>;
-	nsfw?: Loaded<boolean, Ready>;
-	last_message_id?: Loaded<Snowflake, Ready>;
-	last_pin_timestamp?: Loaded<Date, Ready>;
-	bitrate?: Loaded<number, Ready>;
-	user_limit?: Loaded<number, Ready>;
-	rate_limit_per_user?: Loaded<number, Ready>;
-	recipient_flags?: Loaded<ChannelRecipientFlags[], Ready>;
-	nicks?: Loaded<ChannelNick[], Ready>;
-	managed?: Loaded<boolean, Ready>;
-	blocked_user_warning_dismissed?: Loaded<boolean, Ready>;
-	safety_warnings?: Loaded<ChannelSafetyWarning[], Ready>;
-	application_id?: Loaded<Snowflake, Ready>;
-	owner_id?: Loaded<Snowflake, Ready>;
-	owner?: Loaded<Snowflake, Ready>;
-	parent_id?: Loaded<Snowflake, Ready>;
-	rtc_region?: Loaded<ChannelVoiceRegion, Ready>;
-	video_quality_mode?: Loaded<ChannelVideoQualityMode, Ready>;
-	total_message_sent?: Loaded<number, Ready>;
-	message_count?: Loaded<number, Ready>;
-	member_count?: Loaded<number, Ready>;
-	member_ids_preview?: Loaded<Snowflake[], Ready>;
-	thread_metadata?: Loaded<ThreadMetadata, Ready>;
-	member?: Loaded<ThreadMember, Ready>;
-	default_auto_archive_duration?: Loaded<number, Ready>;
-	default_thread_rate_limit_per_user?: Loaded<number, Ready>;
-	permissions?: Loaded<string, Ready>;
-	flags?: Loaded<ChannelFlags, Ready>;
-	available_tags?: Loaded<ForumTag[], Ready>;
-	applied_tags?: Loaded<Snowflake[], Ready>;
-	default_reaction_emoji?: Loaded<ForumDefaultReaction, Ready>;
-	default_forum_layout?: Loaded<ForumLayoutType, Ready>;
-	default_sort_order?: Loaded<ForumSortOrderType, Ready>;
-	default_tag_setting?: Loaded<ForumSearchTagSetting, Ready>;
-	is_message_request?: Loaded<boolean, Ready>;
-	is_message_request_timestamp?: Loaded<Date, Ready>;
-	is_spam?: Loaded<boolean, Ready>;
-	status?: Loaded<string, Ready>;
-	hd_streaming_until?: Loaded<Date, Ready>;
-	hd_streaming_buyer_id?: Loaded<Snowflake, Ready>;
-	linked_lobby?: Loaded<LinkedLobby, Ready>;
-	is_linkable?: Loaded<boolean, Ready>;
-	is_viewable_and_writeable_by_all_members?: Loaded<boolean, Ready>;
-	template?: Loaded<string, Ready>;
-	version?: Loaded<string, Ready>;
+	position?: PartialType<number, Partial>;
+	permission_overwritees?: PartialType<ChannelPermissionOverwrite[], Partial>;
+	topic?: PartialType<string, Partial>;
+	nsfw?: PartialType<boolean, Partial>;
+	last_message_id?: PartialType<Snowflake, Partial>;
+	last_pin_timestamp?: PartialType<Date, Partial>;
+	bitrate?: PartialType<number, Partial>;
+	user_limit?: PartialType<number, Partial>;
+	rate_limit_per_user?: PartialType<number, Partial>;
+	recipient_flags?: PartialType<ChannelRecipientFlags[], Partial>;
+	nicks?: PartialType<ChannelNick[], Partial>;
+	managed?: PartialType<boolean, Partial>;
+	blocked_user_warning_dismissed?: PartialType<boolean, Partial>;
+	safety_warnings?: PartialType<ChannelSafetyWarning[], Partial>;
+	application_id?: PartialType<Snowflake, Partial>;
+	owner_id?: PartialType<Snowflake, Partial>;
+	owner?: PartialType<Snowflake, Partial>;
+	parent_id?: PartialType<Snowflake, Partial>;
+	rtc_region?: PartialType<ChannelVoiceRegion, Partial>;
+	video_quality_mode?: PartialType<ChannelVideoQualityMode, Partial>;
+	total_message_sent?: PartialType<number, Partial>;
+	message_count?: PartialType<number, Partial>;
+	member_count?: PartialType<number, Partial>;
+	member_ids_preview?: PartialType<Snowflake[], Partial>;
+	thread_metadata?: PartialType<ThreadMetadata, Partial>;
+	member?: PartialType<ThreadMember, Partial>;
+	default_auto_archive_duration?: PartialType<number, Partial>;
+	default_thread_rate_limit_per_user?: PartialType<number, Partial>;
+	permissions?: PartialType<string, Partial>;
+	flags?: PartialType<ChannelFlags, Partial>;
+	available_tags?: PartialType<ForumTag[], Partial>;
+	applied_tags?: PartialType<Snowflake[], Partial>;
+	default_reaction_emoji?: PartialType<ForumDefaultReaction, Partial>;
+	default_forum_layout?: PartialType<ForumLayoutType, Partial>;
+	default_sort_order?: PartialType<ForumSortOrderType, Partial>;
+	default_tag_setting?: PartialType<ForumSearchTagSetting, Partial>;
+	is_message_request?: PartialType<boolean, Partial>;
+	is_message_request_timestamp?: PartialType<Date, Partial>;
+	is_spam?: PartialType<boolean, Partial>;
+	status?: PartialType<string, Partial>;
+	hd_streaming_until?: PartialType<Date, Partial>;
+	hd_streaming_buyer_id?: PartialType<Snowflake, Partial>;
+	linked_lobby?: PartialType<LinkedLobby, Partial>;
+	is_linkable?: PartialType<boolean, Partial>;
+	is_viewable_and_writeable_by_all_members?: PartialType<boolean, Partial>;
+	template?: PartialType<string, Partial>;
+	version?: PartialType<string, Partial>;
 
 	get settings(): ChannelSettings | undefined {
 		if (!this.guildId) return undefined;
@@ -297,8 +297,8 @@ export class Channel<Ready extends boolean = true> {
 	};
 };
 
-export class ChannelCollection extends Collection<Channel | Channel<false>> {
-	async fetch<Partial extends boolean = false>(id: Snowflake, guild?: Snowflake): Promise<Channel<Partial extends true ? false : true>> {
+export class ChannelCollection extends Collection<Channel | Channel<true>> {
+	async fetch<Partial extends boolean = false>(id: Snowflake, guild?: Snowflake): Promise<Channel<Partial>> {
 		let response: Response;
 		if (guild) response = await discordClient.rest.request(`/users/@me/dms/${id}`);
 		else response = await discordClient.rest.request(`/channels/${id}`);

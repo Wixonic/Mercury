@@ -1,4 +1,4 @@
-import { Color, Collection, Loaded } from "/scripts/lib/utils.ts";
+import { Color, Collection, PartialType } from "/scripts/lib/utils.ts";
 
 import { CDNElement } from "/scripts/services/discord/cdn.ts";
 import { Channel, ChannelCollection } from "/scripts/services/discord/channel.ts";
@@ -203,7 +203,7 @@ export interface GuildIdentity {
 	badge: CDNElement;
 };
 
-export class Guild<Ready extends boolean = true> {
+export class Guild<Partial extends boolean = false> {
 	id!: Snowflake;
 	name!: string;
 	icon?: CDNElement;
@@ -217,41 +217,41 @@ export class Guild<Ready extends boolean = true> {
 	approximate_member_count?: number;
 	approximate_presence_count?: number;
 
-	banner?: Loaded<CDNElement, Ready>;
-	owner_id!: Loaded<Snowflake, Ready>;
-	afk_channel_id?: Loaded<Snowflake, Ready>;
-	afk_timeout!: Loaded<number, Ready>;
-	widget_enabled?: Loaded<boolean, Ready>;
-	widget_channel_id?: Loaded<Snowflake, Ready>;
-	verification_level!: Loaded<GuildVerificationLevel, Ready>;
-	default_message_notifications!: Loaded<GuildMessageNotificationLevel, Ready>;
-	explicit_content_filter!: Loaded<GuildExplicitContentFilterLevel, Ready>;
-	roles!: Loaded<RoleCollection, Ready>;
-	mfa_level!: Loaded<GuildMfaLevel, Ready>;
-	system_channel_id?: Loaded<Snowflake, Ready>;
-	system_channel_flags!: Loaded<GuildSystemChannelFlags, Ready>;
-	rules_channel_id?: Loaded<Snowflake, Ready>;
-	public_updates_channel_id?: Loaded<Snowflake, Ready>;
-	safety_alerts_channel_id?: Loaded<Snowflake, Ready>;
-	max_presences?: Loaded<number, Ready>;
-	max_members?: Loaded<number, Ready>;
-	vanity_url_code?: Loaded<string, Ready>;
-	premium_tier!: Loaded<GuildPremiumTier, Ready>;
-	premium_subscription_count!: Loaded<number, Ready>;
-	preferred_locale!: Loaded<string, Ready>;
-	max_video_channel_users?: Loaded<number, Ready>;
-	max_stage_video_channel_users?: Loaded<number, Ready>;
-	nsfw_level!: Loaded<GuildNsfwLevel, Ready>;
-	owner_configured_content_level?: Loaded<GuildNsfwLevel, Ready>;
-	hub_type?: Loaded<GuildHubType, Ready>;
-	premium_progress_bar_enabled!: Loaded<boolean, Ready>;
-	premium_progress_bar_enabled_user_updated_at?: Loaded<Date, Ready>;
-	latest_onboarding_question_id?: Loaded<Snowflake, Ready>;
-	incidents_data?: Loaded<GuildAutomodIncidentsData, Ready>;
-	premium_features?: Loaded<GuildPremiumFeatures, Ready>;
-	profile?: Loaded<GuildIdentity, Ready>;
-	official_message_color?: Loaded<Color, Ready>;
-	version?: Loaded<string, Ready>;
+	banner?: PartialType<CDNElement, Partial>;
+	owner_id!: PartialType<Snowflake, Partial>;
+	afk_channel_id?: PartialType<Snowflake, Partial>;
+	afk_timeout!: PartialType<number, Partial>;
+	widget_enabled?: PartialType<boolean, Partial>;
+	widget_channel_id?: PartialType<Snowflake, Partial>;
+	verification_level!: PartialType<GuildVerificationLevel, Partial>;
+	default_message_notifications!: PartialType<GuildMessageNotificationLevel, Partial>;
+	explicit_content_filter!: PartialType<GuildExplicitContentFilterLevel, Partial>;
+	roles!: PartialType<RoleCollection, Partial>;
+	mfa_level!: PartialType<GuildMfaLevel, Partial>;
+	system_channel_id?: PartialType<Snowflake, Partial>;
+	system_channel_flags!: PartialType<GuildSystemChannelFlags, Partial>;
+	rules_channel_id?: PartialType<Snowflake, Partial>;
+	public_updates_channel_id?: PartialType<Snowflake, Partial>;
+	safety_alerts_channel_id?: PartialType<Snowflake, Partial>;
+	max_presences?: PartialType<number, Partial>;
+	max_members?: PartialType<number, Partial>;
+	vanity_url_code?: PartialType<string, Partial>;
+	premium_tier!: PartialType<GuildPremiumTier, Partial>;
+	premium_subscription_count!: PartialType<number, Partial>;
+	preferred_locale!: PartialType<string, Partial>;
+	max_video_channel_users?: PartialType<number, Partial>;
+	max_stage_video_channel_users?: PartialType<number, Partial>;
+	nsfw_level!: PartialType<GuildNsfwLevel, Partial>;
+	owner_configured_content_level?: PartialType<GuildNsfwLevel, Partial>;
+	hub_type?: PartialType<GuildHubType, Partial>;
+	premium_progress_bar_enabled!: PartialType<boolean, Partial>;
+	premium_progress_bar_enabled_user_updated_at?: PartialType<Date, Partial>;
+	latest_onboarding_question_id?: PartialType<Snowflake, Partial>;
+	incidents_data?: PartialType<GuildAutomodIncidentsData, Partial>;
+	premium_features?: PartialType<GuildPremiumFeatures, Partial>;
+	profile?: PartialType<GuildIdentity, Partial>;
+	official_message_color?: PartialType<Color, Partial>;
+	version?: PartialType<string, Partial>;
 
 	channels = new ChannelCollection();
 
@@ -320,9 +320,9 @@ export class Guild<Ready extends boolean = true> {
 	};
 };
 
-export class GuildCollection extends Collection<Guild | Guild<false>> {
-	async fetch<Partial extends boolean = false>(id: Snowflake, partial: Partial = false as Partial): Promise<Guild<Partial extends true ? false : true>> {
+export class GuildCollection extends Collection<Guild | Guild<true>> {
+	async fetch<Partial extends boolean = false>(id: Snowflake, partial: Partial = false as Partial): Promise<Guild<Partial>> {
 		const response = await discordClient.rest.request(`/guilds/${id}${partial ? "/basic" : ""}`);
-		return new Guild<Partial extends true ? false : true>(await response.json());
+		return new Guild<Partial>(await response.json());
 	};
 };

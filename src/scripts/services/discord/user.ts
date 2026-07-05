@@ -1,4 +1,4 @@
-import { Collection, Color, Loaded } from "/scripts/lib/utils.ts";
+import { Collection, Color, PartialType } from "/scripts/lib/utils.ts";
 
 import { CDNElement } from "/scripts/services/discord/cdn.ts";
 import { Snowflake } from "/scripts/services/discord/snowflake.ts";
@@ -220,7 +220,7 @@ export enum UserStatusType {
 	unknown
 };
 
-export class User<Ready extends boolean = true> {
+export class User<Partial extends boolean = false> {
 	id!: Snowflake;
 	username!: string;
 	discriminator!: string;
@@ -236,27 +236,27 @@ export class User<Ready extends boolean = true> {
 	accent_color?: Color;
 	public_flags?: PublicUserFlags;
 
-	linked_users!: Loaded<UserLinkedUser[], Ready>;
-	mfa_enabled!: Loaded<boolean, Ready>;
-	nsfw_allowed?: Loaded<boolean, Ready>;
-	age_verification_status!: Loaded<UserAgeVerificationStatus, Ready>;
-	pronouns?: Loaded<string, Ready>;
-	bio!: Loaded<string, Ready>;
-	locale?: Loaded<string, Ready>;
-	verified!: Loaded<boolean, Ready>;
-	email!: Loaded<string, Ready>;
-	phone?: Loaded<string, Ready>;
-	premium_type!: Loaded<UserPremiumType, Ready>;
-	premium_state?: Loaded<UserPremiumState, Ready>;
-	personal_connection_id?: Loaded<Snowflake, Ready>;
-	flags!: Loaded<UserFlags, Ready>;
-	purchased_flags?: Loaded<UserPurchasedFlags, Ready>;
-	premium_usage_flags?: Loaded<UserPremiumUsageFlags, Ready>;
-	desktop?: Loaded<boolean, Ready>;
-	mobile?: Loaded<boolean, Ready>;
-	has_bounced_email?: Loaded<boolean, Ready>;
-	authenticator_types?: Loaded<UserAuthenticatorType[], Ready>;
-	analytics_token!: Loaded<string, Ready>;
+	linked_users!: PartialType<UserLinkedUser[], Partial>;
+	mfa_enabled!: PartialType<boolean, Partial>;
+	nsfw_allowed?: PartialType<boolean, Partial>;
+	age_verification_status!: PartialType<UserAgeVerificationStatus, Partial>;
+	pronouns?: PartialType<string, Partial>;
+	bio!: PartialType<string, Partial>;
+	locale?: PartialType<string, Partial>;
+	verified!: PartialType<boolean, Partial>;
+	email!: PartialType<string, Partial>;
+	phone?: PartialType<string, Partial>;
+	premium_type!: PartialType<UserPremiumType, Partial>;
+	premium_state?: PartialType<UserPremiumState, Partial>;
+	personal_connection_id?: PartialType<Snowflake, Partial>;
+	flags!: PartialType<UserFlags, Partial>;
+	purchased_flags?: PartialType<UserPurchasedFlags, Partial>;
+	premium_usage_flags?: PartialType<UserPremiumUsageFlags, Partial>;
+	desktop?: PartialType<boolean, Partial>;
+	mobile?: PartialType<boolean, Partial>;
+	has_bounced_email?: PartialType<boolean, Partial>;
+	authenticator_types?: PartialType<UserAuthenticatorType[], Partial>;
+	analytics_token!: PartialType<string, Partial>;
 
 	constructor(data: any) {
 		Object.assign(this, data);
@@ -294,9 +294,9 @@ export class User<Ready extends boolean = true> {
 	};
 };
 
-export class UserCollection extends Collection<User | User<false>> {
-	async fetch<Partial extends boolean = false>(id: Snowflake, partial: Partial = false as Partial): Promise<User<Partial extends true ? false : true>> {
+export class UserCollection extends Collection<User | User<true>> {
+	async fetch<Partial extends boolean = false>(id: Snowflake, partial: Partial = false as Partial): Promise<User<Partial>> {
 		const response = await discordClient.rest.request(`/users/${id}${partial ? "/basic" : ""}`);
-		return new User<Partial extends true ? false : true>(await response.json());
+		return new User<Partial>(await response.json());
 	};
 };
