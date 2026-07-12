@@ -3,6 +3,8 @@ import { getIcon } from "/scripts/lib/icon.ts";
 import { ChannelCategory, ChannelType } from "/scripts/services/discord/channel.ts";
 import { Snowflake } from "/scripts/services/discord/snowflake.ts";
 
+import { displayChannel } from "/components/app/views/shared/channel.ts";
+
 import { discordClient } from "/main.ts";
 
 export const render = async (container: HTMLElement, params: URLSearchParams) => {
@@ -15,9 +17,6 @@ export const render = async (container: HTMLElement, params: URLSearchParams) =>
 			title: "Unknown Guild"
 		};
 	} else {
-		// const channelNameElement = container.querySelector(".channel-name") as HTMLElement;
-		// channelNameElement.textContent = guild.name ?? "Unknown Guild";
-
 		const [channels, caretDownIcon, gearIcon, plusIcon, chatTextIcon] = await Promise.all([
 			guild.listChannels(),
 			getIcon("caret-down"),
@@ -29,6 +28,10 @@ export const render = async (container: HTMLElement, params: URLSearchParams) =>
 		const channelsContainer = container.querySelector(".channels") as HTMLElement;
 
 		const parents: Record<Snowflake, HTMLElement> = {};
+
+		const channelContentContainer = container.querySelector(".content") as HTMLElement;
+		let channelCleanup: (() => void) | undefined;
+		let isLoadingChannel = false;
 
 		for (const category of channels.filter((channel) => channel.type === ChannelType.GuildCategory)) {
 			const categoryElement = document.createElement("div");
@@ -99,14 +102,20 @@ export const render = async (container: HTMLElement, params: URLSearchParams) =>
 				event.stopPropagation();
 			});
 
-			channelElement.addEventListener("click", (event) => {
+			channelElement.addEventListener("click", async (event) => {
 				event.stopPropagation();
+				if (!isLoadingChannel) {
+					isLoadingChannel = true;
 
-				const currentSelectedChannel = document.querySelector(".channel.selected");
-				if (currentSelectedChannel) currentSelectedChannel.classList.remove("selected");
-				channelElement.classList.add("selected");
+					if (channelCleanup) channelCleanup();
 
-				// Display channel
+					const currentSelectedChannel = document.querySelector(".channel.selected");
+					if (currentSelectedChannel) currentSelectedChannel.classList.remove("selected");
+					channelElement.classList.add("selected");
+
+					channelCleanup = await displayChannel(channel, channelContentContainer);
+					isLoadingChannel = false;
+				}
 			});
 
 			if (channel.category === ChannelCategory.Voice) {
@@ -116,8 +125,17 @@ export const render = async (container: HTMLElement, params: URLSearchParams) =>
 				channelOpenChatButton.classList.add("open-chat");
 				channelOpenChatButton.innerHTML = chatTextIcon;
 				channelOpenChatButton.setAttribute("tooltip", "Open chat");
-				channelOpenChatButton.addEventListener("click", (event) => {
+				channelOpenChatButton.addEventListener("click", async (event) => {
 					event.stopPropagation();
+					if (!isLoadingChannel) {
+						isLoadingChannel = true;
+
+
+						if (channelCleanup) channelCleanup();
+
+						// TODO: Display chat for this vc
+						isLoadingChannel = false;
+					}
 				});
 
 				channelElement.append(nameElement, channelOpenChatButton, channelSettingsButton);
@@ -132,7 +150,9 @@ export const render = async (container: HTMLElement, params: URLSearchParams) =>
 		channelsContainer.classList.remove("loading");
 
 		return {
-			cleanup: () => { },
+			cleanup: () => {
+				if (channelCleanup) channelCleanup();
+			},
 			title: guild.name
 		};
 	}

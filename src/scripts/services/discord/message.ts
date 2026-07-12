@@ -1,41 +1,13 @@
+import { Attachment } from "/scripts/services/discord/attachment.ts";
 import { Channel } from "/scripts/services/discord/channel.ts";
 import { Snowflake } from "/scripts/services/discord/snowflake.ts";
 import { Sticker } from "/scripts/services/discord/sticker.ts";
 import { User } from "/scripts/services/discord/user.ts";
+import { type ResolvedData, resolveData } from "/scripts/services/discord/utils.ts";
 
 import { Collection, PartialType } from "/scripts/lib/utils.ts";
 
 import { discordClient } from "/main.ts";
-
-// timestamp_ms % 13
-export enum UserJoinMessageType {
-	// "{author} joined the party."
-	Default = 0,
-	// "{author} is here."
-	IsHere = 1,
-	// "Welcome, {author}. We hope you brought pizza."
-	Pizza = 2,
-	// "A wild {author} appeared."
-	Wild = 3,
-	// "{author} just landed."
-	Landing = 4,
-	// "{author} just slid into the server."
-	Sliding = 5,
-	// "{author} just showed up!"
-	ShowedUp = 6,
-	// "Welcome {author}. Say hi!"
-	Greetings = 7,
-	// "{author} hopped into the server."
-	Hopped = 8,
-	// "Everyone welcome {author}!"
-	EveryoneWelcome = 9,
-	// "Glad you're here, {author}."
-	Glad = 10,
-	// "Good to see you, {author}."
-	GoodToSeeYou = 11,
-	// "Yay you made it, {author}!"
-	MadeIt = 12
-};
 
 export enum MessageType {
 	// "{content}"
@@ -183,6 +155,40 @@ const MessageFlags = {
 } as const;
 export type MessageFlags = typeof MessageFlags[keyof typeof MessageFlags];
 
+export interface MessageCall {
+	participants: Snowflake[];
+	ended_timestamp?: Date;
+};
+
+// timestamp_ms % 13
+export enum UserJoinMessageType {
+	// "{author} joined the party."
+	Default = 0,
+	// "{author} is here."
+	IsHere = 1,
+	// "Welcome, {author}. We hope you brought pizza."
+	Pizza = 2,
+	// "A wild {author} appeared."
+	Wild = 3,
+	// "{author} just landed."
+	Landing = 4,
+	// "{author} just slid into the server."
+	Sliding = 5,
+	// "{author} just showed up!"
+	ShowedUp = 6,
+	// "Welcome {author}. Say hi!"
+	Greetings = 7,
+	// "{author} hopped into the server."
+	Hopped = 8,
+	// "Everyone welcome {author}!"
+	EveryoneWelcome = 9,
+	// "Glad you're here, {author}."
+	Glad = 10,
+	// "Good to see you, {author}."
+	GoodToSeeYou = 11,
+	// "Yay you made it, {author}!"
+	MadeIt = 12
+};
 
 export class Message<Partial extends boolean = false> {
 	id: Snowflake;
@@ -191,8 +197,8 @@ export class Message<Partial extends boolean = false> {
 	type: MessageType;
 	content: string;
 	author: User<true>;
-	activity?: MessageRichPresenceActivity;
-	application?: MessageRichPresenceApplication;
+	activity?: any; // TODO: MessagePresenceInvite
+	application?: any; // TODO: MessagePresenceApplication
 	application_id?: Snowflake;
 	parent_application_id?: Snowflake;
 	flags: MessageFlags;
@@ -207,29 +213,29 @@ export class Message<Partial extends boolean = false> {
 	mention_roles!: PartialType<Snowflake[], Partial>;
 	mention_channels?: PartialType<(Channel | Channel<true>)[], Partial>;
 	attachments!: PartialType<Attachment[], Partial>;
-	embeds!: PartialType<Embed[], Partial>;
-	reactions?: PartialType<Reaction[], Partial>;
+	embeds!: PartialType<any[], Partial>; // TODO: Embed
+	reactions?: PartialType<any[], Partial>; // TODO: Reaction
 	nonce?: PartialType<number | string, Partial>;
 	pinned!: PartialType<boolean, Partial>;
 	webhook_id?: PartialType<Snowflake, Partial>;
-	message_reference?: PartialType<MessageReference, Partial>;
+	message_reference?: PartialType<any, Partial>; // TODO: MessageReference
 	referenced_message?: PartialType<Message, Partial>;
-	message_snapshots?: PartialType<MessageSnapshot[], Partial>;
+	message_snapshots?: PartialType<any[], Partial>; // TODO: MessageSnapshot
 	call?: PartialType<MessageCall, Partial>;
-	interaction_metadata?: PartialType<MessageInteraction, Partial>;
+	interaction_metadata?: PartialType<any, Partial>; // TODO: MessageInteraction
 	resolved?: PartialType<ResolvedData, Partial>;
 	thread?: PartialType<Channel, Partial>;
-	role_subscription_data?: PartialType<MessageRoleSubscription, Partial>;
-	purchase_notification?: PartialType<MessagePurchaseNotification, Partial>;
-	gift_info?: PartialType<MessageGiftInfo, Partial>;
-	components!: PartialType<MessageComponent[], Partial>;
-	sticker_items?: PartialType<StickerItem[], Partial>;
-	stickers?: PartialType<Sticker[], Partial>;
-	poll?: PartialType<Poll, Partial>;
+	role_subscription_data?: PartialType<any, Partial>; // TODO: MessageRoleSubscription
+	purchase_notification?: PartialType<any, Partial>; // TODO: MessagePurchaseNotification
+	gift_info?: PartialType<any, Partial>; // TODO: MessageGiftInfo
+	components!: PartialType<any[], Partial>; // TODO: MessageComponent
+	sticker_items?: PartialType<any[], Partial>; // TODO: StickerItem
+	stickers?: PartialType<any[], Partial>; // TODO: Sticker
+	poll?: PartialType<any, Partial>; // TODO: Poll
 	changelog_id?: PartialType<Snowflake, Partial>;
-	soundboard_sounds?: PartialType<SoundboardSound[], Partial>;
-	potions?: PartialType<Potion[], Partial>;
-	shared_client_theme?: PartialType<SharedClientTheme, Partial>;
+	soundboard_sounds?: PartialType<any[], Partial>; // TODO: SoundboardSound
+	potions?: PartialType<any[], Partial>; // TODO: Potion
+	shared_client_theme?: PartialType<any, Partial>; // TODO: SharedClientTheme
 
 	constructor(data: any) {
 		const Partial = data.timestamp === undefined;
@@ -268,7 +274,7 @@ export class Message<Partial extends boolean = false> {
 			this.message_snapshots = data.message_snapshots;
 			this.call = data.call;
 			this.interaction_metadata = data.interaction_metadata;
-			this.resolved = data.resolved;
+			this.resolved = resolveData(data.resolved);
 			if (data.thread) this.thread = new Channel(data.thread);
 			this.role_subscription_data = data.role_subscription_data;
 			this.purchase_notification = data.purchase_notification;

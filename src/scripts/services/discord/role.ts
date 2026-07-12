@@ -1,4 +1,4 @@
-import { Permission } from "/scripts/services/discord/permission.ts";
+// import { Permission } from "/scripts/services/discord/permission.ts";
 
 import { Collection } from "/scripts/lib/utils.ts";
 
