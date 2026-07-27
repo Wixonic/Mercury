@@ -29,7 +29,6 @@ export const render = async (container: HTMLElement, params: URLSearchParams) =>
 
 		const parents: Record<Snowflake, HTMLElement> = {};
 
-		const channelContentContainer = container.querySelector(".content") as HTMLElement;
 		let channelCleanup: (() => void) | undefined;
 		let isLoadingChannel = false;
 
@@ -113,7 +112,7 @@ export const render = async (container: HTMLElement, params: URLSearchParams) =>
 					if (currentSelectedChannel) currentSelectedChannel.classList.remove("selected");
 					channelElement.classList.add("selected");
 
-					channelCleanup = await displayChannel(channel, channelContentContainer);
+					channelCleanup = await displayChannel(channel, container);
 					isLoadingChannel = false;
 				}
 			});
