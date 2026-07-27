@@ -246,7 +246,7 @@ export const renderApp = (container: HTMLElement): (() => void) => {
 	discordClient.addEventListener(GatewayEvent.Connecting, handleConnecting);
 	discordClient.addEventListener(GatewayDispatchEvent.Ready, handleReady);
 	discordClient.addEventListener(GatewayEvent.Disconnected, handleDisconnected);
-	discordClient.addEventListener(GatewayEvent.Resumed, handleResumed);
+	discordClient.addEventListener(GatewayDispatchEvent.Resumed, handleResumed);
 
 	if (discordClient.ws && discordClient.sessionId) ready();
 
@@ -255,6 +255,6 @@ export const renderApp = (container: HTMLElement): (() => void) => {
 		discordClient.removeEventListener(GatewayEvent.Connecting, handleConnecting);
 		discordClient.removeEventListener(GatewayDispatchEvent.Ready, handleReady);
 		discordClient.removeEventListener(GatewayEvent.Disconnected, handleDisconnected);
-		discordClient.removeEventListener(GatewayEvent.Resumed, handleResumed);
+		discordClient.removeEventListener(GatewayDispatchEvent.Resumed, handleResumed);
 	};
 };
