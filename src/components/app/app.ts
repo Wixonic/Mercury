@@ -182,14 +182,45 @@ const ready = async () => {
 	guildIds.forEach((id, index) => guildElementMap.set(id, guildElementsList[index]));
 
 	if (discordClient.settings?.guildFolders?.folders) {
+		const caretIcon = await getIcon("caret-down");
+
 		for (const folder of discordClient.settings.guildFolders.folders) {
 			if (folder.id?.value !== undefined) {
 				const folderElement = document.createElement("div");
-				folderElement.classList.add("folder");
+				folderElement.classList.add("folder", "collapsed");
+
+				if (folder.color !== undefined) folderElement.style.setProperty("--folder-color", `#${Number(folder.color).toString(16).padStart(6, "0")}`);
+
+				const folderHeader = document.createElement("button");
+				folderHeader.classList.add("folder-header");
+				folderHeader.addEventListener("click", () => folderElement.classList.toggle("collapsed"));
+
+				const folderIcon = document.createElement("div");
+				folderIcon.classList.add("folder-icon");
+				folderHeader.append(folderIcon);
+
+				const caretSpan = document.createElement("span");
+				caretSpan.classList.add("caret");
+				caretSpan.innerHTML = caretIcon;
+				folderHeader.append(caretSpan);
+
+				folderElement.append(folderHeader);
+
+				const folderContent = document.createElement("div");
+				folderContent.classList.add("folder-content");
+				folderElement.append(folderContent);
 
 				for (const guildId of folder.guildIds) {
 					const guildElement = guildElementMap.get(guildId.toString());
-					if (guildElement) folderElement.append(guildElement);
+					if (guildElement) {
+						folderContent.append(guildElement);
+						if (folderIcon.children.length < 4) {
+							const miniIcon = guildElement.cloneNode(true) as HTMLElement;
+							miniIcon.classList.add("mini-icon");
+							miniIcon.removeAttribute("tooltip");
+							folderIcon.append(miniIcon);
+						}
+					}
 				}
 
 				guildContainer.append(folderElement);

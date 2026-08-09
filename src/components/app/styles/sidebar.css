@@ -60,3 +60,114 @@ nav.sidebar button span.icon {
 
 	border: 1px solid hsla(var(--text), 10%);
 }
+
+nav.sidebar .folder {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+
+	position: relative;
+
+	width: 3rem;
+
+	background: color-mix(var(--folder-color, var(--background-front)) 20%, var(--background-front) 80%);
+
+	border-radius: 0.75rem;
+
+	margin: 0.4rem auto;
+	padding: 0.25rem 0;
+
+	transition: background 0.2s ease-in-out;
+}
+
+nav.sidebar .folder.collapsed {
+	width: 2.5rem;
+
+	background: transparent;
+
+	padding: 0;
+}
+
+nav.sidebar button.folder-header {
+	width: 2.5rem;
+	height: 2.5rem;
+
+	background: transparent;
+
+	margin: 0;
+
+	overflow: visible;
+}
+
+nav.sidebar .folder.collapsed button.folder-header {
+	background: color-mix(var(--folder-color, var(--background-front)) 20%, var(--background-front) 80%);
+}
+
+nav.sidebar button.folder-header:hover {
+	background: color-mix(var(--folder-color, var(--background-front)) 30%, var(--background-front) 70%);
+}
+
+nav.sidebar .folder-header .caret {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+
+	width: 100%;
+	height: 100%;
+
+	color: var(--folder-color, var(--background-front));
+}
+
+nav.sidebar .folder.collapsed .folder-header .caret {
+	display: none;
+}
+
+nav.sidebar .folder-icon {
+	display: none;
+	grid-template-columns: 1fr 1fr;
+	grid-template-rows: 1fr 1fr;
+	gap: 0.1rem;
+
+	width: 100%;
+	height: 100%;
+
+	padding: 0.2rem;
+}
+
+nav.sidebar .folder.collapsed .folder-icon {
+	display: grid;
+}
+
+nav.sidebar button.mini-icon {
+	width: 100%;
+	height: 100%;
+
+	background: transparent;
+
+	border: none;
+
+	margin: 0;
+	padding: 0;
+
+	pointer-events: none;
+}
+
+nav.sidebar button.mini-icon .icon {
+	border-radius: 0.2rem;
+}
+
+nav.sidebar .folder-content {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+
+	width: 100%;
+}
+
+nav.sidebar .folder.collapsed .folder-content {
+	display: none;
+}
+
+nav.sidebar .folder-content button {
+	margin: 0.2rem auto;
+}
