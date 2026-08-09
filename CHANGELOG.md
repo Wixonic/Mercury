@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.2.0](https://github.com/Wixonic/Mercury/compare/v0.1.1...v0.2.0) (2026-08-09)
+
+
+### Features
+
+**This is not a production release. Please do not use in production environment.
+Everything is subject to change. No changelog provided.**
+
 ## [0.1.1](https://github.com/Wixonic/Mercury/compare/v0.1.0...v0.1.1) (2026-06-29)
 
 

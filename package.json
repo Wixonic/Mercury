@@ -3,7 +3,7 @@
 	"displayName": "Mercury",
 	"description": "Lightweight, fast, privacy-first, and powerful Discord client.",
 	"author": "Wixonic <contact@wixonic.fr> (https://wixonic.fr)",
-	"version": "0.1.1",
+	"version": "0.2.0",
 	"license": "Wixonic Non-Commercial License",
 	"repository": "github:Wixonic/Mercury",
 	"scripts": {
