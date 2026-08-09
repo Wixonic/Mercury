@@ -3,6 +3,7 @@
 @import url("./styles/sidebar.css");
 @import url("./styles/you-bar.css");
 @import url("./styles/animated-icon.css");
+@import url("./styles/name-style.css");
 
 main {
 	--channel-list-width: 16rem;

@@ -55,34 +55,53 @@ const ready = async () => {
 		youBar.classList.add("loading");
 
 		const avatarContainer = youBar.querySelector("div.avatar")!;
-		{
-			const avatarImagePlaceholder = avatarContainer.querySelector(".avatar-image") as HTMLElement;
-			const avatarImage = animateIcon(self!.avatar.getURL(undefined, 256, "high", undefined, undefined, false), self!.avatar.getURL(undefined, 256, "high", undefined, undefined, true));
-			avatarImage.classList.add("avatar-image");
-			avatarImagePlaceholder.replaceWith(avatarImage);
+		const avatarImageSVG = avatarContainer.querySelector("svg.avatar-image")!;
+		const avatarImage = avatarImageSVG.querySelector("image")!;
+		const staticAvatarUrl = self!.avatar.getURL(undefined, 256, "high", undefined, false, false);
+		const animatedAvatarUrl = self!.avatar.getURL(undefined, 256, "high", undefined, undefined, true);
+		avatarImage.setAttribute("href", staticAvatarUrl);
 
-			const avatarDecorationPlaceholder = avatarContainer.querySelector(".avatar-decoration") as HTMLElement;
-			if (self!.avatar_decoration_data) {
-				const avatarDecoration = animateIcon(self!.avatar_decoration_data.asset.getURL(undefined, 256, "high", undefined, undefined, false), self!.avatar_decoration_data.asset.getURL(undefined, 256, "high", undefined, undefined, true));
-				avatarDecoration.classList.add("avatar-decoration");
-				avatarDecorationPlaceholder.replaceWith(avatarDecoration);
-			} else avatarDecorationPlaceholder.classList.add("hidden");
+		const avatarDecorationSVG = avatarContainer.querySelector("svg.avatar-decoration")!;
+		const avatarDecoration = avatarDecorationSVG.querySelector("image")!;
+		let staticDecorationUrl: string | undefined;
+		let animatedDecorationUrl: string | undefined;
 
-			// const statusIndicator = avatarContainer.querySelector("div.status-indicator");
-			// statusIndicator.classList.add();
+		if (self!.avatar_decoration_data) {
+			staticDecorationUrl = self!.avatar_decoration_data.asset.getURL("png", 256, "high", undefined, false, false);
+			animatedDecorationUrl = self!.avatar_decoration_data.asset.getURL("png", 256, "high", undefined, undefined, true);
+			avatarDecoration.setAttribute("href", staticDecorationUrl);
+			avatarDecorationSVG.classList.remove("hidden");
+		} else {
+			avatarDecorationSVG.classList.add("hidden");
 		}
+
+		const statusIconSVG = avatarContainer.querySelector("svg.status-icon")!;
+		statusIconSVG.classList.add("online");
 
 		const stateElement = youBar.querySelector("div.state")!;
 		{
 			const nameElement = stateElement.querySelector("div.name")!;
-			nameElement.textContent = self!.display_name;
+			if (self!.display_name_styles) {
+				const { font_id, effect_id, colors } = self!.display_name_styles;
+				nameElement.innerHTML = `
+					<div class="discord-name-style-container">
+						<div class="discord-name-style-inner discord-name-style-font-${font_id} discord-name-style-effect-${effect_id}"
+							 style="--discord-name-style-color-1: ${colors[0]?.hex ?? 'inherit'}; --discord-name-style-color-2: ${colors[1]?.hex ?? 'inherit'};"
+							 data-username="${self!.display_name}">
+							${self!.display_name}
+						</div>
+					</div>
+				`;
+			} else {
+				nameElement.textContent = self!.display_name;
+			}
 		}
 
 		const nameplate = youBar.querySelector(".nameplate") as HTMLElement;
 		if (self!.collectibles?.nameplate?.asset) {
 			const animatedNameplate = animateIcon(`https://cdn.discordapp.com/media/v1/collectibles-shop/${self!.collectibles.nameplate.sku_id}/static`, `https://cdn.discordapp.com/media/v1/collectibles-shop/${self!.collectibles.nameplate.sku_id}/animated`);
 			animatedNameplate.classList.add("nameplate");
-			animatedNameplate.style.setProperty("--palette", `var(--palette-${self!.collectibles.nameplate.palette})`);
+			animatedNameplate.style.setProperty("--palette", `var(--discord-nameplate-${self!.collectibles.nameplate.palette}-dark)`);
 			nameplate.replaceWith(animatedNameplate);
 		} else nameplate.classList.add("hidden");
 
@@ -90,17 +109,23 @@ const ready = async () => {
 		settingsButton.innerHTML = settingsIcon;
 
 		youBar.addEventListener("mouseenter", () => {
+			youBar.classList.add("animated");
 			const animatedIcons = youBar.querySelectorAll(".icon.animated") as NodeListOf<AnimatedIconElement>;
 			animatedIcons.forEach((icon) => {
 				if (typeof icon.play === "function") icon.play();
 			});
+			avatarImage.setAttribute("href", animatedAvatarUrl);
+			if (animatedDecorationUrl) avatarDecoration.setAttribute("href", animatedDecorationUrl);
 		});
 
 		youBar.addEventListener("mouseleave", () => {
+			youBar.classList.remove("animated");
 			const animatedIcons = youBar.querySelectorAll(".icon.animated") as NodeListOf<AnimatedIconElement>;
 			animatedIcons.forEach((icon) => {
 				if (typeof icon.stop === "function") icon.stop();
 			});
+			avatarImage.setAttribute("href", staticAvatarUrl);
+			if (staticDecorationUrl) avatarDecoration.setAttribute("href", staticDecorationUrl);
 		});
 
 		youBar.classList.remove("loading");

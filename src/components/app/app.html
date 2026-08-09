@@ -35,13 +35,37 @@
 	<div class="nameplate"></div>
 
 	<div class="avatar">
+		<svg class="avatar-decoration hidden" viewBox="0 0 100 100" aria-label="Avatar decoration">
+			<defs>
+				<mask id="avatar-decoration-mask">
+					<rect fill="white" width="100" height="100" />
+					<circle fill="black" cx="79.17" cy="79.17" r="14.58" />
+				</mask>
+			</defs>
+			<image width="100" height="100" mask="url(#avatar-decoration-mask)" />
+		</svg>
 
-		<div class="avatar-image"></div>
+		<svg class="avatar-image" viewBox="0 0 100 100" aria-label="Avatar">
+			<defs>
+				<mask id="avatar-mask">
+					<circle fill="white" cx="50" cy="50" r="50" />
+					<circle fill="black" cx="85" cy="85" r="17.5" />
+				</mask>
+			</defs>
+			<image width="100" height="100" mask="url(#avatar-mask)" />
+		</svg>
 
-		<div class="avatar-decoration"></div>
-
-		<div class="status-indicator"></div>
-
+		<svg class="status-icon" viewBox="0 0 100 100">
+			<defs>
+				<mask id="status-icon-mask">
+					<circle fill="white" cx="50" cy="50" r="50" />
+					<circle class="cutout-moon" fill="black" cx="25" cy="25" r="0" />
+					<circle class="cutout-ring" fill="black" cx="50" cy="50" r="0" />
+					<rect class="cutout-bar" fill="black" x="12.5" y="50" width="75" height="0" rx="12.5" ry="12.5" />
+				</mask>
+			</defs>
+			<circle class="status-fill" cx="50" cy="50" r="50" mask="url(#status-icon-mask)" />
+		</svg>
 	</div>
 
 	<div class="state">
