@@ -7,7 +7,7 @@ We gratefully acknowledge the authors and contributors of the following projects
 
 ## [Phosphor Icons](https://phosphoricons.com/)
 - **Authors:** [Helena Zhang](https://www.helenazhang.com), [Tobias Fried](https://tobiasfried.com) and [Phosphor Icons contributors](https://github.com/phosphor-icons)
-- **Used in:** [`src/assets/icons/`](./src/assets/icons/)
+- **Used in:** [`src/assets/icon/`](./src/assets/icon/)
 - **License:** [MIT License](https://github.com/phosphor-icons/homepage/blob/master/LICENSE)
 
 ```
