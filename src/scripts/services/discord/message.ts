@@ -260,10 +260,18 @@ export class Message<Partial extends boolean = false> {
 			if (data.edited_timestamp) this.edited_timestamp = new Date(data.edited_timestamp);
 			this.tts = data.tts;
 			this.mention_everyone = data.mention_everyone;
-			this.mentions = data.mentions;
+			if (data.mentions) this.mentions = data.mentions.map((mention: any) => {
+				const user = mention instanceof User ? mention : new User(mention);
+				discordClient.users.patch(user.id, user);
+				return user;
+			});
 			this.mention_roles = data.mention_roles;
-			this.mention_channels = data.mention_channels;
-			this.attachments = data.attachments;
+			if (data.mention_channels) this.mention_channels = data.mention_channels.map((channelData: any) => {
+				const channel = channelData instanceof Channel ? channelData : new Channel(channelData);
+				if (discordClient.channels) discordClient.channels.patch(channel.id, channel);
+				return channel;
+			});
+			if (data.attachments) this.attachments = data.attachments.map((attachment: any) => new Attachment(attachment));
 			this.embeds = data.embeds;
 			this.reactions = data.reactions;
 			this.nonce = data.nonce;
@@ -274,7 +282,7 @@ export class Message<Partial extends boolean = false> {
 			this.message_snapshots = data.message_snapshots;
 			this.call = data.call;
 			this.interaction_metadata = data.interaction_metadata;
-			this.resolved = resolveData(data.resolved);
+			if (data.resolved) this.resolved = resolveData(data.resolved);
 			if (data.thread) this.thread = new Channel(data.thread);
 			this.role_subscription_data = data.role_subscription_data;
 			this.purchase_notification = data.purchase_notification;
@@ -290,11 +298,200 @@ export class Message<Partial extends boolean = false> {
 		}
 	};
 
-	render(): string {
-		return "";
+	render(grouped: boolean = false): HTMLElement {
+		const messageElement = document.createElement("div");
+		messageElement.className = "message";
+		if (grouped) messageElement.classList.add("grouped");
+		messageElement.dataset.id = this.id;
+
+		const avatar = document.createElement("img");
+		avatar.className = "avatar";
+		avatar.src = this.author.avatar.getURL("webp", 80);
+		messageElement.append(avatar);
+
+		const body = document.createElement("div");
+		body.className = "message-body";
+		messageElement.append(body);
+
+		const header = document.createElement("div");
+		header.className = "message-header";
+		body.append(header);
+
+		const authorEl = document.createElement("span");
+		authorEl.className = "author";
+		authorEl.textContent = this.author.display_name;
+		header.append(authorEl);
+
+		const timeElement = document.createElement("time");
+		timeElement.className = "timestamp";
+		if (this.timestamp) {
+			const date = this.timestamp as Date;
+			const now = new Date();
+			const isToday = date.getDate() === now.getDate() && date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
+			const yesterday = new Date(now);
+			yesterday.setDate(yesterday.getDate() - 1);
+			const isYesterday = date.getDate() === yesterday.getDate() && date.getMonth() === yesterday.getMonth() && date.getFullYear() === yesterday.getFullYear();
+			const hhmm = `${date.getHours().toString().padStart(2, "0")}:${date.getMinutes().toString().padStart(2, "0")}`;
+			if (isToday) timeElement.textContent = hhmm;
+			else if (isYesterday) timeElement.textContent = `Yesterday ${hhmm}`;
+			else timeElement.textContent = `${date.getDate().toString().padStart(2, "0")}/${(date.getMonth() + 1).toString().padStart(2, "0")}/${date.getFullYear()} ${hhmm}`;
+		}
+		header.append(timeElement);
+
+		if (this.type === MessageType.Reply && this.referenced_message) {
+			const replyElement = document.createElement("div");
+			replyElement.className = "reply";
+
+			const replyAvatar = document.createElement("img");
+			replyAvatar.className = "reply-avatar";
+			replyAvatar.src = this.referenced_message.author.avatar.getURL("webp", 16);
+
+			const replyAuthor = document.createElement("span");
+			replyAuthor.className = "reply-author";
+			replyAuthor.textContent = this.referenced_message.author.display_name;
+
+			const replyContent = document.createElement("span");
+			replyContent.className = "reply-content";
+			replyContent.textContent = this.referenced_message.content;
+
+			replyElement.append(replyAvatar, replyAuthor, replyContent);
+			body.append(replyElement);
+		}
+
+		const contentEl = document.createElement("div");
+		contentEl.className = "content";
+		contentEl.append(this.parseContent(this.content));
+		body.append(contentEl);
+
+		if (this.attachments && this.attachments.length > 0) {
+			const attachmentsContainer = document.createElement("div");
+			attachmentsContainer.className = "attachments";
+			for (const attachment of this.attachments as Attachment[]) {
+				if (attachment.content_type?.startsWith("image/")) {
+					const imageElement = document.createElement("img");
+					imageElement.src = attachment.proxy_url;
+					attachmentsContainer.append(imageElement);
+				} else if (attachment.content_type?.startsWith("video/")) {
+					const videoElement = document.createElement("video");
+					videoElement.controls = true;
+					videoElement.src = attachment.proxy_url;
+					attachmentsContainer.append(videoElement);
+				} else {
+					const fileElement = document.createElement("div");
+					fileElement.className = "file-attachment";
+
+					const nameElement = document.createElement("span");
+					nameElement.className = "file-name";
+					nameElement.textContent = attachment.filename;
+
+					const sizeElement = document.createElement("span");
+					sizeElement.className = "file-size";
+					let size = attachment.size;
+					let unit = "B";
+					if (size > 1024 * 1024) { size /= 1024 * 1024; unit = "MB"; }
+					else if (size > 1024) { size /= 1024; unit = "KB"; }
+					sizeElement.textContent = `${size.toFixed(2)} ${unit}`;
+
+					fileElement.append(nameElement, sizeElement);
+					attachmentsContainer.append(fileElement);
+				}
+			}
+			body.append(attachmentsContainer);
+		}
+
+		return messageElement;
+	};
+
+	parseContent(content: string): HTMLElement {
+		const container = document.createElement("span");
+		if (!content) return container;
+		const regex = /(<@[!]?\d+>|<@&\d+>|<#\d+>|<a?:[a-zA-Z0-9_]+:\d+>|@everyone|@here|https?:\/\/\S+)/g;
+		const parts = content.split(regex);
+		for (const part of parts) {
+			if (!part) continue;
+			if (part.startsWith("<@") && !part.startsWith("<@&")) {
+				const id = part.replace(/<@[!]?(\d+)>/, "$1");
+				const cachedUser = this.mentions?.find((user) => user.id === id) ?? discordClient.users.cached().get(id);
+				const element = document.createElement("span");
+				element.className = "mention user-mention";
+				if (cachedUser) element.textContent = `@${cachedUser.display_name}`;
+				else {
+					element.textContent = `@${id}`;
+					discordClient.users.get(id).then((user) => {
+						if (user) element.textContent = `@${user.display_name}`;
+					}).catch(() => { });
+				}
+				container.append(element);
+			} else if (part.startsWith("<@&")) {
+				const id = part.replace(/<@&(\d+)>/, "$1");
+				const element = document.createElement("span");
+				element.className = "mention role-mention";
+				let roleName: string | undefined;
+				const channel = this.channel_id ? discordClient.channels?.cached().get(this.channel_id) : undefined;
+				const guildId = this.channel?.guildId ?? channel?.guildId;
+				if (guildId) {
+					const guild = discordClient.guilds.cached().get(guildId);
+					const role = guild?.roles?.cached().get(id);
+					if (role) roleName = role.name;
+				}
+				element.textContent = roleName ? `@${roleName}` : "@role";
+				container.append(element);
+			} else if (part === "@everyone" || part === "@here") {
+				const element = document.createElement("span");
+				element.className = "mention";
+				element.textContent = part;
+				container.append(element);
+			} else if (part.startsWith("<#")) {
+				const id = part.replace(/<#(\d+)>/, "$1");
+				let channelName: string | undefined;
+				const channel = discordClient.channels?.cached().get(id);
+				if (channel) channelName = channel.displayName;
+				else {
+					for (const guild of discordClient.guilds.cached().values()) {
+						const found = guild.channels?.cached().get(id);
+						if (found) {
+							channelName = found.displayName;
+							break;
+						}
+					}
+				}
+				const element = document.createElement("span");
+				element.className = "mention channel-mention";
+				element.textContent = `#${channelName ?? id}`;
+				container.append(element);
+			} else if (part.startsWith("<:") || part.startsWith("<a:")) {
+				const animated = part.startsWith("<a:");
+				const match = part.match(/<a?:([a-zA-Z0-9_]+):(\d+)>/);
+				if (match) {
+					const element = document.createElement("img");
+					element.className = "emoji";
+					element.src = `https://cdn.discordapp.com/emojis/${match[2]}.${animated ? "gif" : "webp"}?size=48`;
+					element.alt = `:${match[1]}:`;
+					element.title = `:${match[1]}:`;
+					container.append(element);
+				} else container.append(document.createTextNode(part));
+			} else if (part.match(/^https?:\/\/\S+/)) {
+				const element = document.createElement("a");
+				element.className = "link";
+				element.href = part;
+				element.target = "_blank";
+				element.textContent = part;
+				container.append(element);
+			} else container.append(document.createTextNode(part));
+		}
+		return container;
+	};
+
+	static parseContent(content: string): HTMLElement {
+		const message = new Message({ id: "", channel_id: "", author: { id: "", username: "", discriminator: "0" }, content });
+		return message.parseContent(content);
 	};
 };
 
 export class MessageCollection extends Collection<Message | Message<true>> {
+	constructor(messages?: any[]) {
+		super();
 
+		if (messages) for (const data of messages) this.set(data.id, data instanceof Message ? data : new Message(data));
+	};
 };

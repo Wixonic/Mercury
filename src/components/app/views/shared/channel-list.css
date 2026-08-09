@@ -76,7 +76,8 @@
 	cursor: pointer;
 }
 
-.channels .category-header:first-child {
+.channels .category-header:first-child,
+.channels>.channel:first-child {
 	margin-top: 0.5rem;
 }
 
@@ -96,37 +97,47 @@
 
 .channels .channel {
 	grid-template-rows: repeat(auto-fill, 1.75rem);
-	grid-template-columns: 1fr 0;
+	grid-template-columns: 1.25rem 1fr 0;
+	column-gap: 0.35rem;
 
-	color: hsla(var(--text), 60%);
+	color: hsl(var(--text));
+	font-size: 0.8rem;
 
 	height: 1.75rem;
 
 	border-radius: 0.4rem;
+
+	opacity: 0.6;
+
+	transition: opacity 0.15s ease-in-out, background 0.15s ease-in-out, grid-template-columns 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .channels .channel:hover {
-	grid-template-columns: 1fr 1.5rem;
+	grid-template-columns: 1.25rem 1fr 1.5rem;
 
 	background: hsla(var(--text), 5%);
+
+	opacity: 0.9;
 }
 
 .channels .channel.selected {
 	background: hsla(var(--text), 10%);
 
-	color: hsla(var(--text), 100%);
+	opacity: 1;
 }
 
 .channels .channel.selected:hover {
 	background: hsla(var(--text), 15%);
+
+	opacity: 1;
 }
 
 .channels .channel.voice {
-	grid-template-columns: 1fr 0 0;
+	grid-template-columns: 1.25rem 1fr 0 0;
 }
 
 .channels .channel.voice:hover {
-	grid-template-columns: 1fr 1.5rem 1.5rem;
+	grid-template-columns: 1.25rem 1fr 1.5rem 1.5rem;
 }
 
 .channels .category-header>.name,
@@ -155,8 +166,66 @@
 	transform: rotate(-90deg);
 }
 
-.channels .channel>.name {
+.channels .channel>.channel-icon {
 	grid-column: 1;
+
+	display: flex;
+	justify-content: center;
+	align-items: center;
+
+	position: relative;
+
+	width: 1.25rem;
+	height: 1.25rem;
+
+	overflow: visible;
+}
+
+.channels .channel>.channel-icon .main-icon {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+
+	width: 100%;
+	height: 100%;
+}
+
+.channels .channel>.channel-icon .main-icon svg {
+	width: 100%;
+	height: 100%;
+
+	vertical-align: middle;
+}
+
+.channels .channel>.channel-icon .badge {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+
+	position: absolute;
+	bottom: -0.05rem;
+	right: -0.05rem;
+
+	width: 0.55rem;
+	height: 0.55rem;
+
+	background: hsl(var(--background));
+	box-shadow: 0 0 0 0.1rem hsl(var(--background));
+
+	border-radius: 50%;
+
+	overflow: visible;
+}
+
+.channels .channel>.channel-icon .badge svg {
+	width: 100% !important;
+	height: 100% !important;
+
+	vertical-align: top !important;
+}
+
+.channels .channel>.name {
+	grid-column: 2;
 }
 
 .channels .category-header>.name {
@@ -164,11 +233,11 @@
 }
 
 .channels .channel>.settings {
-	grid-column: 2;
+	grid-column: 3;
 }
 
 .channels .channel.voice>.open-chat {
-	grid-column: 2;
+	grid-column: 3;
 }
 
 .channels .category-header>.settings {
@@ -176,7 +245,7 @@
 }
 
 .channels .channel.voice>.settings {
-	grid-column: 3;
+	grid-column: 4;
 }
 
 .channels .category-header>.create-channel {

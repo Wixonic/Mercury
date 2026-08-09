@@ -6,6 +6,7 @@ import { Client, RestClient } from "/scripts/lib/client.ts";
 import { store, type Session } from "/scripts/lib/store.ts";
 import { join, fake, wait } from "/scripts/lib/utils.ts";
 
+import { Channel, ChannelCategory, ChannelCollection } from "/scripts/services/discord/channel.ts";
 import { Guild, GuildCollection } from "/scripts/services/discord/guild.ts";
 import { Snowflake } from "/scripts/services/discord/snowflake.ts";
 import { User, UserCollection } from "/scripts/services/discord/user.ts";
@@ -27,6 +28,7 @@ export class DiscordClient extends Client {
 
 	guilds = new GuildCollection();
 	users = new UserCollection();
+	channels = new ChannelCollection();
 
 	private heartbeat?: ReturnType<typeof setInterval>;
 	private heartbeatTimestamp?: number;
@@ -331,7 +333,18 @@ export class DiscordClient extends Client {
 							}
 						}
 
+						if (message.data.merged_members) {
+							message.data.guilds.forEach((guildData: any, index: number) => {
+								const memberData = message.data.merged_members[index]?.[0];
+								if (memberData) guildData.member = memberData;
+							});
+						}
+
 						for (const guildData of message.data.guilds) this.guilds.set(guildData.id, new Guild(guildData));
+
+						if (message.data.private_channels) {
+							for (const channelData of message.data.private_channels) this.channels.set(channelData.id, new Channel(channelData));
+						}
 
 						store.setState({
 							currentUser: message.data.user
@@ -398,6 +411,25 @@ export class DiscordClient extends Client {
 		}
 
 		console[functionName](...currentLog);
+	};
+
+	async listDMs(force = false): Promise<Channel[]> {
+		if (!force && this.channels.cached().size > 0) {
+			const dms = Array.from(this.channels.cached().values()).filter((channel) => channel.category === ChannelCategory.DM);
+			if (dms.length > 0) return dms.sort((a, b) => ((b.last_message_id ? BigInt(b.last_message_id) : BigInt(b.id)) > (a.last_message_id ? BigInt(a.last_message_id) : BigInt(a.id)) ? 1 : -1));
+		}
+
+		const response = await this.rest.request("/users/@me/channels");
+		const channelsData = await response.json();
+		const list: Channel[] = [];
+
+		for (const data of channelsData) {
+			const channel = new Channel(data);
+			this.channels.set(channel.id, channel);
+			list.push(channel);
+		}
+
+		return list.sort((a, b) => ((b.last_message_id ? BigInt(b.last_message_id) : BigInt(b.id)) > (a.last_message_id ? BigInt(a.last_message_id) : BigInt(a.id)) ? 1 : -1));
 	};
 
 	async fetchSettings(): Promise<ClientSettings> {

@@ -1,9 +1,12 @@
+import { getIcon } from "/scripts/lib/icon.ts";
 import { Collection, PartialType } from "/scripts/lib/utils.ts";
 
 import { CDNElement } from "/scripts/services/discord/cdn.ts";
 import { Emoji } from "/scripts/services/discord/emoji.ts";
 import { GatewayDispatchEvent, GatewayOpCode } from "/scripts/services/discord/gateway.ts";
 import { GuildMember } from "/scripts/services/discord/guildMember.ts";
+import { Message } from "/scripts/services/discord/message.ts";
+import { Role } from "/scripts/services/discord/role.ts";
 import { ChannelSettings } from "/scripts/services/discord/settings.ts";
 import type { Snowflake } from "/scripts/services/discord/snowflake.ts";
 import { User } from "/scripts/services/discord/user.ts";
@@ -241,11 +244,11 @@ export class Channel<Partial extends boolean = false> {
 			return user.id;
 		});
 		if (data.icon) this.icon = new CDNElement(`/channels/${data.id}/icons`, data.icon);
-		this.guildId = data.guildId;
+		this.guildId = data.guildId ?? data.guild_id;
 
 		if (!Partial) {
 			this.position = data.position;
-			if (data.permission_overwritees) this.permission_overwritees = data.permission_overwritees;
+			if (data.permission_overwrites || data.permission_overwritees) this.permission_overwritees = data.permission_overwrites ?? data.permission_overwritees;
 			this.topic = data.topic;
 			this.nsfw = data.nsfw;
 			this.last_message_id = data.last_message_id;
@@ -340,6 +343,216 @@ export class Channel<Partial extends boolean = false> {
 		else return ChannelCategory.Text;
 	};
 
+	get displayName(): string {
+		if (this.name) return this.name;
+		else if (this.type === ChannelType.DM && this.recipients && this.recipients.length > 0) {
+			const recipient = discordClient.users.cached().get(this.recipients[0]);
+			return recipient?.display_name ?? recipient?.username ?? "Direct Message";
+		} else if (this.type === ChannelType.GroupDM && this.recipients && this.recipients.length > 0) {
+			const names = this.recipients.map((id) => {
+				const recipient = discordClient.users.cached().get(id);
+				return recipient?.display_name || recipient?.username;
+			}).filter(Boolean);
+
+			if (names.length > 0) return names.join(", ");
+			return "Group DM";
+		} else return this.name ?? "Unknown channel";
+	};
+
+	async getDisplayName(): Promise<string> {
+		if (this.name) return this.name;
+		else if (this.type === ChannelType.DM && this.recipients && this.recipients.length > 0) {
+			const recipient = await discordClient.users.get(this.recipients[0]);
+			return recipient?.display_name ?? recipient?.username ?? "Direct Message";
+		} else if (this.type === ChannelType.GroupDM && this.recipients && this.recipients.length > 0) {
+			const users = await Promise.all(this.recipients.map((id) => discordClient.users.get(id)));
+			const names = users.filter((user): user is User => Boolean(user)).map((user) => user.display_name || user.username);
+
+			if (names.length > 0) return names.join(", ");
+			return "Group DM";
+		} else return this.name ?? "Unknown channel";
+	};
+
+	get isPrivate(): boolean {
+		if (this.is_viewable_and_writeable_by_all_members === false) return true;
+		if (this.permission_overwritees && this.guildId) {
+			const everyoneOverwrite = this.permission_overwritees.find((overwrite) => overwrite.id === this.guildId);
+			if (everyoneOverwrite) return (BigInt(everyoneOverwrite.deny) & (1n << 10n)) !== 0n;
+		}
+		return false;
+	};
+
+	get isAccessible(): boolean {
+		if (this.guildId) {
+			const guild = discordClient.guilds.cached().get(this.guildId);
+			if (guild?.owner_id === discordClient.id) return true;
+
+			const memberRoles = guild?.currentMember?.roles ?? [];
+
+			if (this.permission_overwritees) {
+				const memberOverwrite = this.permission_overwritees.find((overwrite) => (overwrite.type === ChannelPermissionOverwriteType.Member || (overwrite.type as any) === 1) && overwrite.id === discordClient.id);
+				if (memberOverwrite) {
+					if ((BigInt(memberOverwrite.allow) & (1n << 10n)) !== 0n) return true;
+					if ((BigInt(memberOverwrite.deny) & (1n << 10n)) !== 0n) return false;
+				}
+
+				for (const roleId of memberRoles) {
+					const roleOverwrite = this.permission_overwritees.find((overwrite) => (overwrite.type === ChannelPermissionOverwriteType.Role || (overwrite.type as any) === 0) && overwrite.id === roleId);
+					if (roleOverwrite && (BigInt(roleOverwrite.allow) & (1n << 10n)) !== 0n) return true;
+				}
+
+				for (const roleId of memberRoles) {
+					const role = guild?.roles ? guild.roles.cached().get(roleId) : undefined;
+					if (role?.permissions && (BigInt(role.permissions) & (1n << 3n)) !== 0n) return true;
+				}
+
+				const everyoneOverwrite = this.permission_overwritees.find((overwrite) => overwrite.id === this.guildId);
+				if (everyoneOverwrite && (BigInt(everyoneOverwrite.deny) & (1n << 10n)) !== 0n) return false;
+			}
+		}
+
+		if (this.permissions) {
+			const perms = BigInt(this.permissions);
+			if ((perms & (1n << 3n)) !== 0n) return true;
+			if (this.category === ChannelCategory.Voice) return (perms & (1n << 20n)) !== 0n;
+			return (perms & (1n << 10n)) !== 0n;
+		}
+
+		if (this.is_viewable_and_writeable_by_all_members === false) return false;
+
+		return true;
+	};
+
+	get canSendMessages(): boolean {
+		if (this.guildId) {
+			const guild = discordClient.guilds.cached().get(this.guildId);
+			if (guild?.owner_id === discordClient.id) return true;
+
+			const memberRoles = guild?.currentMember?.roles ?? [];
+
+			if (this.permission_overwritees) {
+				const memberOverwrite = this.permission_overwritees.find((overwrite) => (overwrite.type === ChannelPermissionOverwriteType.Member || (overwrite.type as any) === 1) && overwrite.id === discordClient.id);
+				if (memberOverwrite) {
+					if ((BigInt(memberOverwrite.allow) & (1n << 11n)) !== 0n) return true;
+					if ((BigInt(memberOverwrite.deny) & (1n << 11n)) !== 0n) return false;
+				}
+
+				for (const roleId of memberRoles) {
+					const roleOverwrite = this.permission_overwritees.find((overwrite) => (overwrite.type === ChannelPermissionOverwriteType.Role || (overwrite.type as any) === 0) && overwrite.id === roleId);
+					if (roleOverwrite && (BigInt(roleOverwrite.allow) & (1n << 11n)) !== 0n) return true;
+				}
+
+				for (const roleId of memberRoles) {
+					const role = guild?.roles ? guild.roles.cached().get(roleId) : undefined;
+					if (role?.permissions && (BigInt(role.permissions) & (1n << 3n)) !== 0n) return true;
+				}
+
+				const everyoneOverwrite = this.permission_overwritees.find((overwrite) => overwrite.id === this.guildId);
+				if (everyoneOverwrite && (BigInt(everyoneOverwrite.deny) & (1n << 11n)) !== 0n) return false;
+			}
+		}
+
+		if (this.permissions) {
+			const perms = BigInt(this.permissions);
+			if ((perms & (1n << 3n)) !== 0n) return true;
+			if (this.category === ChannelCategory.Voice) return (perms & (1n << 11n)) !== 0n && (perms & (1n << 10n)) !== 0n;
+			return (perms & (1n << 11n)) !== 0n;
+		}
+
+		if (this.is_viewable_and_writeable_by_all_members === false) return false;
+
+		return true;
+	};
+
+	async getAllowedAccess(): Promise<{ roles: Role[]; rolePlaceholders: string[]; members: (User<boolean> | string)[] }> {
+		const roles: Role[] = [];
+		const rolePlaceholders: string[] = [];
+		const members: (User<boolean> | string)[] = [];
+
+		if (!this.permission_overwritees) return { roles, rolePlaceholders, members };
+
+		const guild = this.guildId ? await discordClient.guilds.get(this.guildId) : null;
+
+		for (const overwrite of this.permission_overwritees) {
+			const allow = BigInt(overwrite.allow);
+			if ((allow & (1n << 10n)) !== 0n) {
+				if (overwrite.type === ChannelPermissionOverwriteType.Role || (overwrite.type as any) === 0) {
+					if (overwrite.id === this.guildId) rolePlaceholders.push("@everyone");
+					else {
+						const role = guild?.roles ? guild.roles.cached().get(overwrite.id) : undefined;
+						if (role) roles.push(role);
+						else rolePlaceholders.push(`Role (${overwrite.id})`);
+					}
+				} else {
+					const user = await discordClient.users.get(overwrite.id);
+					members.push(user ?? `User (${overwrite.id})`);
+				}
+			}
+		}
+
+		return { roles, rolePlaceholders, members };
+	};
+
+	get isAgeRestricted(): boolean {
+		return !!this.nsfw;
+	};
+
+	get baseIconName(): string {
+		switch (this.type) {
+			case ChannelType.GuildText: return "hash";
+
+			case ChannelType.GuildVoice: return "user-sound";
+
+			case ChannelType.GuildStageVoice: return "video-conference";
+
+			case ChannelType.GuildNews: return "cell-tower";
+
+			case ChannelType.GuildForum:
+			case ChannelType.GuildMedia: return "chats-teardrop";
+
+			case ChannelType.PublicThread:
+			case ChannelType.PrivateThread:
+			case ChannelType.NewsThread: return "envelope-simple-open";
+
+			default: return "hash";
+		}
+	};
+
+	get badgeIconNames(): string[] {
+		const badges: string[] = [];
+
+		if (this.isPrivate) {
+			if (this.isAccessible) badges.push("shield");
+			else badges.push("lock-simple");
+		}
+
+		if (this.isAgeRestricted) badges.push("warning");
+		return badges;
+	};
+
+	async getIconElement(): Promise<HTMLElement> {
+		const iconContainer = document.createElement("div");
+		iconContainer.classList.add("channel-icon");
+
+		const mainIconSvg = await getIcon(this.baseIconName);
+		const mainIcon = document.createElement("span");
+		mainIcon.classList.add("main-icon");
+		mainIcon.innerHTML = mainIconSvg;
+		iconContainer.append(mainIcon);
+
+		for (const badgeName of this.badgeIconNames) {
+			const badgeSvg = await getIcon(badgeName);
+			if (badgeSvg) {
+				const badgeElement = document.createElement("span");
+				badgeElement.classList.add("badge", badgeName);
+				badgeElement.innerHTML = badgeSvg;
+				iconContainer.append(badgeElement);
+			}
+		}
+
+		return iconContainer;
+	};
+
 	async requestChannelMemberCount() {
 		await discordClient.send({
 			op: GatewayOpCode.RequestChannelMemberCount,
@@ -351,9 +564,42 @@ export class Channel<Partial extends boolean = false> {
 
 		await discordClient.awaitEvent(GatewayDispatchEvent.GuildMemberListUpdate, (data: any) => data.channel_id === this.id);
 	};
+
+	async listMessages(options?: ChannelMessagesOptions | number): Promise<Message[]> {
+		const searchParams = new URLSearchParams();
+		if (typeof options === "number") searchParams.set("limit", options.toString());
+		else if (options) {
+			if (options.around) searchParams.set("around", options.around);
+			if (options.before) searchParams.set("before", options.before);
+			if (options.after) searchParams.set("after", options.after);
+			if (options.limit) searchParams.set("limit", options.limit.toString());
+		}
+
+		const query = searchParams.size > 0 ? `?${searchParams.toString()}` : "";
+		const response = await discordClient.rest.request(`/channels/${this.id}/messages${query}`);
+		const data = await response.json();
+		const list = data.map((messageData: any) => new Message(messageData));
+		return list.reverse();
+	};
+};
+
+export interface ChannelMessagesOptions {
+	around?: Snowflake;
+	before?: Snowflake;
+	after?: Snowflake;
+	limit?: number;
 };
 
 export class ChannelCollection extends Collection<Channel | Channel<true>> {
+	constructor(channels?: any[], guildId?: Snowflake) {
+		super();
+
+		if (channels) for (const data of channels) {
+			const channel = data instanceof Channel ? data : new Channel({ ...data, guildId: data.guildId ?? data.guild_id ?? guildId });
+			this.set(channel.id, channel);
+		}
+	};
+
 	async fetch<Partial extends boolean = false>(id: Snowflake, guild?: Snowflake): Promise<Channel<Partial>> {
 		let response: Response;
 		if (guild) response = await discordClient.rest.request(`/users/@me/dms/${id}`);

@@ -254,6 +254,7 @@ export class Guild<Partial extends boolean = false> {
 	version?: PartialType<string, Partial>;
 
 	channels = new ChannelCollection();
+	currentMember?: { roles: Snowflake[]; nick?: string; user_id?: Snowflake; };
 
 	get settings(): GuildSettings | undefined {
 		return discordClient.settings?.guilds?.guilds[this.id];
@@ -264,6 +265,11 @@ export class Guild<Partial extends boolean = false> {
 
 		this.id = data.id;
 		this.name = data.name;
+		if (data.member) this.currentMember = data.member;
+		else if (data.members) {
+			const myMember = data.members.find((member: any) => member.user?.id === discordClient.id || member.user_id === discordClient.id);
+			if (myMember) this.currentMember = myMember;
+		}
 		if (data.icon) this.icon = new CDNElement(`/icons/${data.id}`, data.icon);
 		if (data.home_header) this.home_header = new CDNElement(`/home-headers/${data.id}`, data.home_header);
 		if (data.splash) this.splash = new CDNElement(`/splashes/${data.id}`, data.splash);
@@ -326,7 +332,7 @@ export class Guild<Partial extends boolean = false> {
 			this.version = data.version;
 		}
 
-		this.channels = new ChannelCollection(data.channels ?? []);
+		this.channels = new ChannelCollection(data.channels ?? [], data.id);
 	};
 
 	async listChannels(force = false): Promise<Channel[]> {
@@ -343,7 +349,7 @@ export class Guild<Partial extends boolean = false> {
 		const list = [];
 
 		for (const data of channels) {
-			const channel = new Channel(data);
+			const channel = new Channel({ ...data, guildId: this.id });
 			this.channels.set(channel.id, channel);
 			list.push(channel);
 		}

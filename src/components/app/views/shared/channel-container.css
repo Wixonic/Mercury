@@ -1,10 +1,11 @@
 .channel-container {
 	display: grid;
 	grid-template-columns: var(--channel-list-width) 1fr var(--channel-sidebar-width);
-	grid-template-rows: 2rem 1fr 4rem;
+	grid-template-rows: 2rem 1fr auto;
 
 	width: 100%;
 	height: 100%;
+	min-height: 0;
 }
 
 .channel-container .channels {
@@ -16,12 +17,156 @@
 	grid-row: 1;
 	grid-column: 2 / -1;
 
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+
 	border-bottom: 1px solid hsla(var(--text), 10%);
+
+	padding: 0 0.75rem;
+}
+
+.channel-container .header .channel-icon {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+
+	position: relative;
+
+	width: 1.25rem;
+	height: 1.25rem;
+
+	overflow: visible;
+}
+
+.channel-container .header .channel-icon .main-icon {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+
+	width: 100%;
+	height: 100%;
+
+	overflow: visible;
+}
+
+.channel-container .header .channel-icon .main-icon svg {
+	width: 100%;
+	height: 100%;
+
+	vertical-align: middle;
+}
+
+.channel-container .header .channel-icon .badge {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+
+	position: absolute;
+	bottom: -0.05rem;
+	right: -0.05rem;
+
+	width: 0.55rem;
+	height: 0.55rem;
+
+	background: hsl(var(--background));
+	box-shadow: 0 0 0 0.1rem hsl(var(--background));
+
+	border-radius: 50%;
+
+	overflow: visible;
+}
+
+.channel-container .header .channel-icon .badge svg {
+	width: 100% !important;
+	height: 100% !important;
+
+	vertical-align: top !important;
 }
 
 .channel-container .content {
 	grid-row: 2;
 	grid-column: 2;
+
+	min-height: 0;
+	height: 100%;
+
+	overflow-x: hidden;
+	overflow-y: scroll;
+	scrollbar-width: thin;
+}
+
+.channel-container .content .no-access {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+
+	width: 100%;
+	height: 100%;
+
+	color: hsla(var(--text), 60%);
+	text-align: center;
+
+	padding: 2rem;
+}
+
+.channel-container .content .no-access h3 {
+	color: hsl(var(--text));
+
+	margin: 0 0 0.5rem 0;
+}
+
+.channel-container .content .no-access .allowed-list {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	align-items: center;
+	gap: 0.5rem;
+
+	margin: 0.75rem 0 0 0;
+}
+
+.role-badge,
+.member-badge,
+.user-badge {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.35rem;
+
+	background: hsla(var(--text), 10%);
+
+	color: hsl(var(--text));
+	font-size: 0.85rem;
+	font-weight: 500;
+
+	border: 1px solid transparent;
+	border-radius: 0.3rem;
+
+	padding: 0.2rem 0.6rem;
+}
+
+.role-badge .role-icon {
+	width: 1.1rem;
+	height: 1.1rem;
+
+	border-radius: 0.2rem;
+
+	object-fit: contain;
+}
+
+.role-badge .role-emoji {
+	font-size: 1rem;
+	line-height: 1;
+}
+
+.user-badge .user-avatar {
+	width: 1.1rem;
+	height: 1.1rem;
+
+	border-radius: 50%;
+
+	object-fit: cover;
 }
 
 .channel-container .actionbar {
@@ -29,9 +174,54 @@
 	grid-column: 2;
 }
 
+.channel-container .actionbar.hidden {
+	display: none;
+}
+
+.channel-container .actionbar .input-bar {
+	display: flex;
+	align-items: flex-end;
+
+	padding: 0 1rem 1rem;
+}
+
+.channel-container .actionbar .input-bar .message-input {
+	width: 100%;
+
+	background: hsla(var(--text), 8%);
+
+	color: hsl(var(--text));
+	font-family: inherit;
+	font-size: 0.9rem;
+	line-height: 1.4;
+
+	border: none;
+	border-radius: 0.5rem;
+
+	padding: 0.625rem 1rem;
+
+	resize: none;
+
+	overflow-y: auto;
+
+	outline: none;
+
+	cursor: text;
+	-webkit-user-select: text;
+	user-select: text;
+}
+
+.channel-container .actionbar .input-bar .message-input::placeholder {
+	color: hsla(var(--text), 35%);
+}
+
 .channel-container .sidebar {
 	grid-row: 2 / -1;
 	grid-column: 3;
 
+	min-height: 0;
+
 	border-left: 1px solid hsla(var(--text), 10%);
+
+	overflow-y: auto;
 }
